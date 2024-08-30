@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class CEditAccount : CCreateAccount
 {
+
+    private Color green = new Color(18f / 255f, 166f / 255f, 104f / 255f);
+    private Color red = new Color(231f / 255f, 19f / 255f, 28f / 255f);
+
     private void OnEnable()
     {
         emailInput.text = DatabaseManager.Instance.data.email;
@@ -30,7 +34,7 @@ public class CEditAccount : CCreateAccount
     protected override void SuccessCreate()
     {
         infoPanel.SetActive(true);
-        infoPanelTMP.text = "Edit Success!";
+        infoPanelTMP.text = "수정이 완료되었습니다.";
 
         DatabaseManager.Instance.UpdateUserData();
     }
@@ -38,7 +42,7 @@ public class CEditAccount : CCreateAccount
     protected override void FailCreate()
     {
         infoPanel.SetActive(true);
-        infoPanelTMP.text = "Edit Fail. Try Again.";
+        infoPanelTMP.text = "다시 시도해주세요.";
     }
 
     protected override void CheckEmailDuplication()
@@ -48,14 +52,14 @@ public class CEditAccount : CCreateAccount
         {
             isCheckEmailDP = true;
 
-            dpCheckTMP.color = Color.green;
-            dpCheckTMP.text = "Verified Duplication Email";
+            dpCheckTMP.color = green;
+            dpCheckTMP.text = "이메일이 인증되었습니다.";
 
         }
         else
         {
-            dpCheckTMP.color = Color.red;
-            dpCheckTMP.text = "Email is Duplicated";
+            dpCheckTMP.color = red;
+            dpCheckTMP.text = "중복된 이메일입니다.";
         }
     }
 }
