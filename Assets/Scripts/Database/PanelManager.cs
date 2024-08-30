@@ -7,6 +7,7 @@ using UnityEngine;
 
 public enum Panel
 {
+    introPanel,
     loginPanel,
     createAccountPanel,
     mainMenuPanel,
@@ -37,7 +38,7 @@ public class PanelManager : MonoBehaviour
 
     private void Start()
     {
-        InitPanel((int)Panel.loginPanel);
+        InitPanel((int)Panel.introPanel);
     }
 
     public void InitPanel(int whichPanel)

@@ -9,10 +9,6 @@ public class CCharaInfo : MonoBehaviour
     public TextMeshProUGUI nickname;
     public TextMeshProUGUI level;
 
-    public TMP_InputField nameChangeInputField;
-
-    public Button changeNameButton;
-
     public Image expBar;
 
     private void Start()

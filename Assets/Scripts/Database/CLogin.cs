@@ -19,15 +19,37 @@ public class CLogin : MonoBehaviourPunCallbacks
 
     public GameObject loginFailTMP;
 
+    public Image titleImage;
+
+    public GameObject afterTitleObj;
+
+    public GameObject checkingTMP;
+    public GameObject serverTMP;
+
     private void Awake()
     {
         loginButton.onClick.AddListener(OnLogin);
         createButton.onClick.AddListener(OnToCreateAccount);
+
+        afterTitleObj.SetActive(false);
+        checkingTMP.SetActive(false);
+        serverTMP.SetActive(false);
+    }
+
+    private void Start()
+    {
+        StartCoroutine(IntroAnim());
     }
 
     private void OnEnable()
     {
+        StartCoroutine(IntroAnim());
+
         loginFailTMP.SetActive(false);
+        afterTitleObj.SetActive(false);
+        checkingTMP.SetActive(false);
+        serverTMP.SetActive(false);
+        
 
         emailInput.text = "";
         pwInput.text = "";
@@ -41,25 +63,57 @@ public class CLogin : MonoBehaviourPunCallbacks
     private void OnLogin()
     {
         DatabaseManager.Instance.Login(emailInput.text, pwInput.text, SuccessLogin, FailLogin);
-
-        emailInput.interactable = false;
-        pwInput.interactable = false;
-        loginButton.interactable = false;
-        createButton.interactable = false;
     }
 
     private void SuccessLogin()
     {
+        emailInput.interactable = false;
+        pwInput.interactable = false;
+        loginButton.interactable = false;
+        createButton.interactable = false;
+
         PhotonManager.Instance.TryConnect();
+
+        checkingTMP.SetActive(true);
     }
 
     private void FailLogin()
     {
         loginFailTMP.SetActive(true);
+        checkingTMP.SetActive(false);
+
+        emailInput.interactable = true;
+        pwInput.interactable = true;
+        loginButton.interactable = true;
+        createButton.interactable = true;
+    }
+
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        serverTMP.SetActive(true);
     }
 
     private void OnToCreateAccount()
     {
         PanelManager.Instance.InitPanel((int)Panel.createAccountPanel);
+    }
+
+    private IEnumerator IntroAnim()
+    {
+        float sumTime = 0f;
+        float totalTime = 0.7f;
+
+        while (sumTime <= totalTime)
+        {
+            float t = sumTime / totalTime;
+            titleImage.rectTransform.localScale = Vector3.Lerp(new Vector3(0f, 0f, 0f), new Vector3(1f, 1f, 1f), t);
+
+            sumTime += Time.deltaTime;
+
+            yield return null;
+        }
+
+        titleImage.rectTransform.localScale = new Vector3(1f, 1f, 1f);
+        afterTitleObj.SetActive(true);
     }
 }

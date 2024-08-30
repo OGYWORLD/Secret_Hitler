@@ -15,8 +15,6 @@ public class MainMenuManager : MonoBehaviour
 
     private void Awake()
     {
-        trainButton.onClick.AddListener(ToTrain);
-        pveButton.onClick.AddListener(ToPVE);
         settingButton.onClick.AddListener(ToSetting);
 
         settingPanel.SetActive(false);
@@ -29,7 +27,7 @@ public class MainMenuManager : MonoBehaviour
 
     private void ToPVE()
     {
-        PanelManager.Instance.InitPanel((int)Panel.matchingPanel);
+        
     }
 
     private void ToSetting()

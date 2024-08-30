@@ -33,6 +33,9 @@ public class CCreateAccount : MonoBehaviour
     protected int minNameLength = 3;
     protected int minPWLength = 6;
 
+    private Color green = new Color(18f / 255f, 166f / 255f, 104f / 255f);
+    private Color red = new Color(231f / 255f, 19f / 255f, 28f / 255f);
+
     protected void Awake()
     {
         emailInput.onValueChanged.AddListener(OnEmailValueChanged);
@@ -81,18 +84,23 @@ public class CCreateAccount : MonoBehaviour
 
     protected virtual void CheckEmailDuplication()
     {
-        if (DatabaseManager.Instance.CheckEmailDuplication(emailInput.text))
+        if(emailInput.text.Length == 0)
+        {
+            dpCheckTMP.color = red;
+            dpCheckTMP.text = "이메일 형식을 지켜주세요.";
+        }
+        else if (DatabaseManager.Instance.CheckEmailDuplication(emailInput.text))
         {
             isCheckEmailDP = true;
 
-            dpCheckTMP.color = Color.green;
-            dpCheckTMP.text = "Verified Duplication Email";
+            dpCheckTMP.color = green;
+            dpCheckTMP.text = "이메일이 인증되었습니다.";
             
         }
         else
         {
-            dpCheckTMP.color = Color.red;
-            dpCheckTMP.text = "Email is Duplicated";
+            dpCheckTMP.color = red;
+            dpCheckTMP.text = "중복된 이메일입니다.";
         }
     }
 
@@ -106,8 +114,8 @@ public class CCreateAccount : MonoBehaviour
     {
         if(pwInput.text.Length < minPWLength)
         {
-            pwCheckTMP.color = Color.red;
-            pwCheckTMP.text = "more 6 dixit.";
+            pwCheckTMP.color = red;
+            pwCheckTMP.text = "6자 이상 입력해주세요.";
             isCheckPW = false;
 
             return;
@@ -115,14 +123,14 @@ public class CCreateAccount : MonoBehaviour
 
         if(pwInput.text.CompareTo(pwCheckInput.text) == 0)
         {
-            pwCheckTMP.color = Color.green;
-            pwCheckTMP.text = "Password is Same.";
+            pwCheckTMP.color = green;
+            pwCheckTMP.text = "비밀번호가 동일합니다.";
             isCheckPW = true;
         }
         else
         {
-            pwCheckTMP.color = Color.red;
-            pwCheckTMP.text = "Password is Different.";
+            pwCheckTMP.color = red;
+            pwCheckTMP.text = "비밀번호가 다릅니다.";
             isCheckPW = false;
         }
     }
@@ -130,7 +138,7 @@ public class CCreateAccount : MonoBehaviour
     protected virtual void SuccessCreate()
     {
         infoPanel.SetActive(true);
-        infoPanelTMP.text = "Create Success!";
+        infoPanelTMP.text = "당원 가입 완료";
 
         isCheckEmailDP = false;
     }
@@ -138,7 +146,7 @@ public class CCreateAccount : MonoBehaviour
     protected virtual void FailCreate()
     {
         infoPanel.SetActive(true);
-        infoPanelTMP.text = "Create Fail. Try Again.";
+        infoPanelTMP.text = "당원 가입 실패";
     }
 
     protected void OnClosedInfoPanel()
@@ -151,14 +159,14 @@ public class CCreateAccount : MonoBehaviour
         if(s.Length > maxNameLength)
         {
             isNameLength = false;
-            nameCheckTMP.color = Color.red;
-            nameCheckTMP.text = $"Max Length is {maxNameLength}";
+            nameCheckTMP.color = red;
+            nameCheckTMP.text = $"최대 글자수는 {maxNameLength}입니다.";
         }
         else if(s.Length < minNameLength)
         {
             isNameLength = false;
-            nameCheckTMP.color = Color.red;
-            nameCheckTMP.text = $"Min Length is {minNameLength}";
+            nameCheckTMP.color = red;
+            nameCheckTMP.text = $"최소 글자수는 {minNameLength}입니다.";
         }
         else
         {
@@ -172,21 +180,21 @@ public class CCreateAccount : MonoBehaviour
         if (!isCheckEmailDP)
         {
             ColorBlock colorBlock = dpCheckButton.colors;
-            colorBlock.normalColor = Color.red;
+            colorBlock.normalColor = red;
             dpCheckButton.colors = colorBlock;
         }
 
         if (!isCheckPW)
         {
             ColorBlock colorBlock = pwInput.colors;
-            colorBlock.normalColor = Color.red;
+            colorBlock.normalColor = red;
             pwInput.colors = colorBlock;
         }
 
         if (!isNameLength)
         {
             ColorBlock colorBlock = nickNameInput.colors;
-            colorBlock.normalColor = Color.red;
+            colorBlock.normalColor = red;
             nickNameInput.colors = colorBlock;
         }
 
