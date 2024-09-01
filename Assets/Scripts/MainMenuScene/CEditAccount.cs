@@ -4,10 +4,6 @@ using UnityEngine;
 
 public class CEditAccount : CCreateAccount
 {
-
-    private Color green = new Color(18f / 255f, 166f / 255f, 104f / 255f);
-    private Color red = new Color(231f / 255f, 19f / 255f, 28f / 255f);
-
     private void OnEnable()
     {
         emailInput.text = DatabaseManager.Instance.data.email;
@@ -52,13 +48,13 @@ public class CEditAccount : CCreateAccount
         {
             isCheckEmailDP = true;
 
-            dpCheckTMP.color = green;
+            dpCheckTMP.color = darkgreen;
             dpCheckTMP.text = "이메일이 인증되었습니다.";
 
         }
         else
         {
-            dpCheckTMP.color = red;
+            dpCheckTMP.color = darkred;
             dpCheckTMP.text = "중복된 이메일입니다.";
         }
     }

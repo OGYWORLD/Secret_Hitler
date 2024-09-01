@@ -7,27 +7,23 @@ using TMPro;
 
 public class MainMenuManager : MonoBehaviour
 {
-    public Button trainButton;
-    public Button pveButton;
+    public Button makeRoomButton;
     public Button settingButton;
 
     public GameObject settingPanel;
+    public GameObject makeRoomPanel;
 
     private void Awake()
     {
+        makeRoomButton.onClick.AddListener(ToMakeRoom);
         settingButton.onClick.AddListener(ToSetting);
 
         settingPanel.SetActive(false);
     }
 
-    private void ToTrain()
+    private void ToMakeRoom()
     {
-        // TODO: 훈련장으로 이동
-    }
-
-    private void ToPVE()
-    {
-        
+        makeRoomPanel.SetActive(true);
     }
 
     private void ToSetting()

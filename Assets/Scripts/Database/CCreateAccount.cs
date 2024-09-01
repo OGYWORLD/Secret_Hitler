@@ -33,8 +33,8 @@ public class CCreateAccount : MonoBehaviour
     protected int minNameLength = 3;
     protected int minPWLength = 6;
 
-    private Color green = new Color(18f / 255f, 166f / 255f, 104f / 255f);
-    private Color red = new Color(231f / 255f, 19f / 255f, 28f / 255f);
+    protected Color darkgreen;
+    protected Color darkred;
 
     protected void Awake()
     {
@@ -51,6 +51,9 @@ public class CCreateAccount : MonoBehaviour
 
         infoPanelTMP = infoPanel?.GetComponentInChildren<TextMeshProUGUI>();
         infoPanel.SetActive(false);
+
+        darkgreen = new Color(18f / 255f, 166f / 255f, 104f / 255f);
+        darkred = new Color(231f / 255f, 19f / 255f, 28f / 255f);
     }
 
     private void OnEnable()
@@ -86,20 +89,20 @@ public class CCreateAccount : MonoBehaviour
     {
         if(emailInput.text.Length == 0)
         {
-            dpCheckTMP.color = red;
+            dpCheckTMP.color = darkred;
             dpCheckTMP.text = "이메일 형식을 지켜주세요.";
         }
         else if (DatabaseManager.Instance.CheckEmailDuplication(emailInput.text))
         {
             isCheckEmailDP = true;
 
-            dpCheckTMP.color = green;
+            dpCheckTMP.color = darkgreen;
             dpCheckTMP.text = "이메일이 인증되었습니다.";
             
         }
         else
         {
-            dpCheckTMP.color = red;
+            dpCheckTMP.color = darkred;
             dpCheckTMP.text = "중복된 이메일입니다.";
         }
     }
@@ -114,7 +117,7 @@ public class CCreateAccount : MonoBehaviour
     {
         if(pwInput.text.Length < minPWLength)
         {
-            pwCheckTMP.color = red;
+            pwCheckTMP.color = darkred;
             pwCheckTMP.text = "6자 이상 입력해주세요.";
             isCheckPW = false;
 
@@ -123,13 +126,13 @@ public class CCreateAccount : MonoBehaviour
 
         if(pwInput.text.CompareTo(pwCheckInput.text) == 0)
         {
-            pwCheckTMP.color = green;
+            pwCheckTMP.color = darkgreen;
             pwCheckTMP.text = "비밀번호가 동일합니다.";
             isCheckPW = true;
         }
         else
         {
-            pwCheckTMP.color = red;
+            pwCheckTMP.color = darkred;
             pwCheckTMP.text = "비밀번호가 다릅니다.";
             isCheckPW = false;
         }
@@ -159,13 +162,13 @@ public class CCreateAccount : MonoBehaviour
         if(s.Length > maxNameLength)
         {
             isNameLength = false;
-            nameCheckTMP.color = red;
+            nameCheckTMP.color = darkred;
             nameCheckTMP.text = $"최대 글자수는 {maxNameLength}입니다.";
         }
         else if(s.Length < minNameLength)
         {
             isNameLength = false;
-            nameCheckTMP.color = red;
+            nameCheckTMP.color = darkred;
             nameCheckTMP.text = $"최소 글자수는 {minNameLength}입니다.";
         }
         else
@@ -180,21 +183,21 @@ public class CCreateAccount : MonoBehaviour
         if (!isCheckEmailDP)
         {
             ColorBlock colorBlock = dpCheckButton.colors;
-            colorBlock.normalColor = red;
+            colorBlock.normalColor = darkred;
             dpCheckButton.colors = colorBlock;
         }
 
         if (!isCheckPW)
         {
             ColorBlock colorBlock = pwInput.colors;
-            colorBlock.normalColor = red;
+            colorBlock.normalColor = darkred;
             pwInput.colors = colorBlock;
         }
 
         if (!isNameLength)
         {
             ColorBlock colorBlock = nickNameInput.colors;
-            colorBlock.normalColor = red;
+            colorBlock.normalColor = darkred;
             nickNameInput.colors = colorBlock;
         }
 

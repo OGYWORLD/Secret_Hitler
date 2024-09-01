@@ -41,6 +41,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
             MaxPlayers = 4,
         };
         PhotonNetwork.JoinRandomOrCreateRoom(roomOptions: option);
+
+        // TODO: 방으로 들어가기
     }
 
     public void LeaveRoom()
