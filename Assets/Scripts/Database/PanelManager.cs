@@ -11,7 +11,7 @@ public enum Panel
     loginPanel,
     createAccountPanel,
     mainMenuPanel,
-    matchingPanel
+    roomPanel
 }
 
 public delegate void ToMainMenu();

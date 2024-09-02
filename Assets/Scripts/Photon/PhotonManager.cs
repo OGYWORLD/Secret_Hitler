@@ -34,15 +34,15 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         PanelManager.Instance.toMainMenu?.Invoke();
     }
 
-    public void JoinOrCreateRoom()
+    public void JoinOrCreateRoom(string name, int n)
     {
         RoomOptions option = new()
         {
-            MaxPlayers = 4,
+            MaxPlayers = n,
         };
-        PhotonNetwork.JoinRandomOrCreateRoom(roomOptions: option);
+        PhotonNetwork.JoinRandomOrCreateRoom(roomName: name, roomOptions: option);
 
-        // TODO: 방으로 들어가기
+        PanelManager.Instance.InitPanel((int)Panel.roomPanel);
     }
 
     public void LeaveRoom()

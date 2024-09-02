@@ -6,7 +6,7 @@ using TMPro;
 
 public class CRoomMake : MonoBehaviour
 {
-    public TMP_InputField roomNameTMP;
+    public TMP_InputField roomNameInputField;
 
     public TextMeshProUGUI liberalCnt;
     public TextMeshProUGUI pacistCnt;
@@ -40,6 +40,6 @@ public class CRoomMake : MonoBehaviour
 
     private void OnMakeRoomButton()
     {
-        PhotonManager.Instance.JoinOrCreateRoom();
+        PhotonManager.Instance.JoinOrCreateRoom(roomNameInputField.text, peopleNum.value);
     }
 }

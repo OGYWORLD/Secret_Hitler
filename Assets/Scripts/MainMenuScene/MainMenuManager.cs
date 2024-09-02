@@ -7,6 +7,7 @@ using TMPro;
 
 public class MainMenuManager : MonoBehaviour
 {
+    public Button speedRoomButton;
     public Button makeRoomButton;
     public Button settingButton;
 
@@ -17,6 +18,7 @@ public class MainMenuManager : MonoBehaviour
     {
         makeRoomButton.onClick.AddListener(ToMakeRoom);
         settingButton.onClick.AddListener(ToSetting);
+        speedRoomButton.onClick.AddListener(OnSpeedRoom);
 
         settingPanel.SetActive(false);
     }
@@ -29,5 +31,10 @@ public class MainMenuManager : MonoBehaviour
     private void ToSetting()
     {
         settingPanel.SetActive(true);
+    }
+
+    private void OnSpeedRoom()
+    {
+        PhotonManager.Instance.JoinOrCreateRoom("빠른 시작 해요~", 5);
     }
 }
