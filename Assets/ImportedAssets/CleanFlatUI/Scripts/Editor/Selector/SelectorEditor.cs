@@ -14,8 +14,6 @@ namespace RainbowArt.CleanFlatUI
         Selector selectorTarget;
         SerializedProperty buttonPrevious;
         SerializedProperty buttonNext;
-        SerializedProperty imageNew;
-        SerializedProperty imageCurrent;
         SerializedProperty textNew;
         SerializedProperty textCurrent;                
         SerializedProperty loop;
@@ -31,8 +29,6 @@ namespace RainbowArt.CleanFlatUI
             selectorTarget = (Selector)target;
             buttonPrevious = serializedObject.FindProperty("buttonPrevious"); 
             buttonNext = serializedObject.FindProperty("buttonNext"); 
-            imageNew = serializedObject.FindProperty("imageNew"); 
-            imageCurrent = serializedObject.FindProperty("imageCurrent"); 
             textNew = serializedObject.FindProperty("textNew"); 
             textCurrent = serializedObject.FindProperty("textCurrent"); 
             loop = serializedObject.FindProperty("loop");  
@@ -50,8 +46,6 @@ namespace RainbowArt.CleanFlatUI
             serializedObject.Update();  
             EditorGUILayout.PropertyField(buttonPrevious); 
             EditorGUILayout.PropertyField(buttonNext); 
-            EditorGUILayout.PropertyField(imageNew); 
-            EditorGUILayout.PropertyField(imageCurrent); 
             EditorGUILayout.PropertyField(textNew); 
             EditorGUILayout.PropertyField(textCurrent); 
             EditorGUILayout.PropertyField(loop); 

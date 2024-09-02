@@ -11,6 +11,7 @@ public enum Panel
     loginPanel,
     createAccountPanel,
     mainMenuPanel,
+    enterDelayPanel,
     roomPanel
 }
 

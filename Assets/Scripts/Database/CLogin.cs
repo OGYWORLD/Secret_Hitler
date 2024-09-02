@@ -67,6 +67,7 @@ public class CLogin : MonoBehaviourPunCallbacks
 
     private void SuccessLogin()
     {
+        loginFailTMP.SetActive(false);
         emailInput.interactable = false;
         pwInput.interactable = false;
         loginButton.interactable = false;

@@ -48,12 +48,6 @@ namespace RainbowArt.CleanFlatUI
         Button buttonNext;
 
         [SerializeField]
-        Image imageNew;
-
-        [SerializeField]
-        Image imageCurrent;
-
-        [SerializeField]
         TextMeshProUGUI textNew;
 
         [SerializeField]
@@ -235,33 +229,6 @@ namespace RainbowArt.CleanFlatUI
         {
             textCurrent.text = options[currentIndex].optionText;
             textNew.text = options[newIndex].optionText;
-            if(imageCurrent != null)
-            {
-                if(options[currentIndex].optionImage != null)
-                {
-                    imageCurrent.gameObject.SetActive(true);
-                    imageCurrent.sprite = options[currentIndex].optionImage;
-                }
-                else
-                {
-                    imageCurrent.gameObject.SetActive(false);
-                    imageCurrent.sprite = null;
-                }                       
-            }    
-            if(imageNew != null)
-            {
-                if(options[newIndex].optionImage != null)
-                {
-                    imageNew.gameObject.SetActive(true);
-                    imageNew.sprite = options[newIndex].optionImage;
-                }
-                else
-                {
-                    imageNew.gameObject.SetActive(false);
-                    imageNew.sprite = null;
-                }                    
-            }  
-
         }
 
         void UpdateOptions(bool bNext)
