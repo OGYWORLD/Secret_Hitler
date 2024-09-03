@@ -19,7 +19,6 @@ public class CEnterDelay : MonoBehaviour
     private void OnEnable()
     {
         int index = Random.Range(0, tips.Count);
-        print(index);
         tipTMP.text = tips[index];
     }
 }

@@ -75,8 +75,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         PhotonNetwork.CreateRoom(roomName: name, roomOptions: option);
     }
 
-    public void LeaveRoom()
+    public void EnterRoom(string name)
     {
-        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.JoinRoom(name);
     }
 }

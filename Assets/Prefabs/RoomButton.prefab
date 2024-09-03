@@ -304,7 +304,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: 0ddae3844878efa479294489153e0242, type: 3}
-    m_FontSize: 30
+    m_FontSize: 25
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 0
@@ -460,6 +460,7 @@ MonoBehaviour:
   pacistNum: {fileID: 7512070496859184671}
   maxPeopleNum: {fileID: 7512070495155467879}
   curPeopleNum: {fileID: 7512070495327273745}
+  roomCardButton: {fileID: 7512070496060932284}
 --- !u!1 &7512070496576146593
 GameObject:
   m_ObjectHideFlags: 0
