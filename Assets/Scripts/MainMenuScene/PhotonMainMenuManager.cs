@@ -10,6 +10,8 @@ public class PhotonMainMenuManager : MonoBehaviourPunCallbacks
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
+        PhotonManager.Instance.roomList = roomList; // 갱신된 룸 리스트 저장
+
         RoomCardInit(); // 방 목록 초기화
 
         int index = 0;
@@ -19,7 +21,7 @@ public class PhotonMainMenuManager : MonoBehaviourPunCallbacks
             {
                 continue;
             }
-            else // 방 생성되면 방카드 활성화 후 방카드 인덱스 조정
+            else if(room.MaxPlayers != room.PlayerCount) // 방이 만원이면 목록에서 안 보이게
             {
                 // 방 정보 수정
                 CRoomCardInfo cardInfo = roomCards[index].GetComponent<CRoomCardInfo>();

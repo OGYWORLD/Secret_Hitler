@@ -19,7 +19,7 @@ public class DatabaseManager : MonoBehaviour
 
     private string dbName = "SPACE"; // 디비 이름
     private string tableName = "USER"; // 유저 테이블 이름 (uid, email, pw, level)
-    private string ip = "3.34.193.113";
+    private string ip = "52.78.224.43";
 
     public string rootPW = "";
 
@@ -117,6 +117,22 @@ public class DatabaseManager : MonoBehaviour
 
         cmd.Connection = conn;
         cmd.CommandText = $"SELECT * FROM {tableName} WHERE email='{email}'";
+
+        MySqlDataAdapter dataAdapter = new MySqlDataAdapter(cmd);
+
+        DataSet set = new DataSet();
+
+        dataAdapter.Fill(set);
+
+        return set.Tables[0].Rows.Count == 0;
+    }
+
+    public bool CheckNickNameDuplication(string name)
+    {
+        MySqlCommand cmd = new MySqlCommand();
+
+        cmd.Connection = conn;
+        cmd.CommandText = $"SELECT * FROM {tableName} WHERE name='{name}'";
 
         MySqlDataAdapter dataAdapter = new MySqlDataAdapter(cmd);
 

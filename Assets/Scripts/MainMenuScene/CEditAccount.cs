@@ -11,10 +11,13 @@ public class CEditAccount : CCreateAccount
         pwInput.text = "";
         pwCheckInput.text = "";
 
-        dpCheckTMP.text = "";
-        pwCheckTMP.text = "";
-        nameCheckTMP.text = "";
+        nameDPCheckText.text = "";
+        dpCheckText.text = "";
+        pwCheckText.text = "";
+        nameCheckText.text = "";
 
+        isCheckNameDP = true;
+        isNameLength = true;
         isCheckEmailDP = true;
         isNameLength = true;
     }
@@ -44,18 +47,38 @@ public class CEditAccount : CCreateAccount
     protected override void CheckEmailDuplication()
     {
         if (DatabaseManager.Instance.CheckEmailDuplication(emailInput.text)
-            || emailInput.text.CompareTo(DatabaseManager.Instance.data.email) == 0)
+            || nickNameInput.text.CompareTo(DatabaseManager.Instance.data.name) == 0)
         {
             isCheckEmailDP = true;
 
-            dpCheckTMP.color = darkgreen;
-            dpCheckTMP.text = "이메일이 인증되었습니다.";
+            dpCheckText.color = darkgreen;
+            dpCheckText.text = "닉네임이 인증되었습니다.";
 
         }
         else
         {
-            dpCheckTMP.color = darkred;
-            dpCheckTMP.text = "중복된 이메일입니다.";
+            dpCheckText.color = darkred;
+            dpCheckText.text = "중복된 닉네임입니다.";
+        }
+    }
+
+    protected override void CheckNameDuplication()
+    {
+        if (DatabaseManager.Instance.CheckNickNameDuplication(nickNameInput.text)
+            || emailInput.text.CompareTo(DatabaseManager.Instance.data.email) == 0)
+        {
+            isCheckNameDP = true;
+
+            nameDPCheckText.color = darkgreen;
+            nameDPCheckText.text = "닉네임이 인증되었습니다.";
+
+        }
+        else
+        {
+            isCheckNameDP = false;
+
+            nameDPCheckText.color = darkred;
+            nameDPCheckText.text = "중복된 닉네임입니다.";
         }
     }
 }

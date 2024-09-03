@@ -6,7 +6,7 @@ using TMPro;
 
 public class CCharaInfo : MonoBehaviour
 {
-    public TextMeshProUGUI nickname;
+    public Text nickname;
     public TextMeshProUGUI level;
 
     public Image expBar;

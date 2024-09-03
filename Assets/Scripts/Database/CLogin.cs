@@ -11,8 +11,8 @@ using Photon.Realtime;
 
 public class CLogin : MonoBehaviourPunCallbacks
 {
-    public TMP_InputField emailInput;
-    public TMP_InputField pwInput;
+    public InputField emailInput;
+    public InputField pwInput;
 
     public Button loginButton;
     public Button createButton;
