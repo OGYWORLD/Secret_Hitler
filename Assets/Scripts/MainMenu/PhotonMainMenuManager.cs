@@ -24,6 +24,11 @@ public class PhotonMainMenuManager : MonoBehaviourPunCallbacks
                 {
                     PhotonManager.Instance.roomList.Add(room); // 새로 추가 된 List에 방 추가
                 }
+                else // 이전에 존재한 방인데 옵션이 바뀔 경우 List 삭제 후 새로 삽입
+                {
+                    PhotonManager.Instance.roomList.Remove(room);
+                    PhotonManager.Instance.roomList.Add(room);
+                }
             }
         }
 

@@ -13,6 +13,7 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
     private ChatClient chatClient;
     private string roomName;
 
+    public PlayManager playManager;
     public RoomManager roomManager;
 
     private void Awake()
@@ -58,7 +59,7 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
         {
             if(senders[i] != DatabaseManager.Instance.data.name)
             {
-                GameObject chatObj = roomManager.cardDictionary[senders[i]].transform.GetChild(2).gameObject;
+                GameObject chatObj = playManager.cardDictionary[senders[i]].transform.GetChild(2).gameObject;
                 Text t = chatObj.GetComponentInChildren<Text>();
 
                 t.text = (string)messages[i];

@@ -6,30 +6,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
+
 public class RoomManager : MonoBehaviourPunCallbacks
 {
-    public Text roomNameText;
-    public Text stateText;
-    public Text chatText;
-    public GameObject chatObj;
-
-    public GameObject[] nameCards;
-    public Transform[] cardTrans;
-
-    public TMP_InputField chatInputField;
-
-    //private List<Text> otherNameTexts = new List<Text>();
-    //private List<Text> otherStateTexts = new List<Text>();
-    //private List<Text> otherChatTexts = new List<Text>();
-
-    //public Dictionary<string, (GameObject, Text)> chatDictionary = new Dictionary<string, (GameObject, Text)>(); // <닉네임, (채팅obj, 채팅창)>
-    //private List<GameObject> chatObjList = new List<GameObject>();
-
-    public Dictionary<string, GameObject> cardDictionary = new Dictionary<string, GameObject>();
-
-    public Button readyButton;
-    public Button outButton;
-    public GameObject settingButtonObj;
+    public PlayManager playManager;
 
     private TextMeshProUGUI readyOrStartTMP;
 
@@ -39,37 +20,33 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     private void Awake()
     {
-        chatInputField.onEndEdit.AddListener(SendChattingMessage);
+        playManager.chatInputField.onEndEdit.AddListener(SendChattingMessage);
+        playManager.chatInputField.onEndEdit.AddListener(CleanTextAfterSendChat);
     }
 
     private void Start()
     {
-        // 이름이랑 상태(레디) 받아오기
-        /*
-        for(int i = 0; i < nameCards.Length; i++)
-        {
-            Text[] texts = nameCards[i].GetComponentsInChildren<Text>();
-            otherNameTexts.Add(texts[0]);
-            otherStateTexts.Add(texts[1]);
+        playManager.outButton.onClick.AddListener(OnPlayerChoiceLeftRoom);
+        playManager.readyButton.onClick.AddListener(SetReady);
+        playManager.readyButton.onClick.AddListener(StartGame);
 
-            GameObject obj = nameCards[i].transform.GetChild(2).gameObject; // 채팅 오브젝트 가져오기
-            chatObjList.Add(obj);
-
-            Text t = obj.GetComponentInChildren<Text>();
-            otherChatTexts.Add(t);
-        }
-        */
-
-        outButton.onClick.AddListener(OnPlayerChoiceLeftRoom);
-        readyButton.onClick.AddListener(SetReady);
-        readyButton.onClick.AddListener(StartGame);
-
-        readyOrStartTMP = readyButton.GetComponentInChildren<TextMeshProUGUI>();
-        settingButtonObj.SetActive(false);
+        readyOrStartTMP = playManager.readyButton.GetComponentInChildren<TextMeshProUGUI>();
+        playManager.settingButtonObj.SetActive(false);
     }
 
     private void OnPlayerChoiceLeftRoom() // 나가기 버튼을 눌렀을 때
     {
+        PhotonManager.Instance.playerProperties["ready"] = false;
+        PhotonManager.Instance.SetCustomProperty();
+
+        // 내꺼 채팅 정보 지우기
+        playManager.chatObj.SetActive(false);
+        playManager.chatText.text = "";
+
+        InitChatObj(); // 다른 사람 채팅 정보 지우기
+
+        NameStateListInit(); // 이름 상태 텍스트 비우기
+
         PhotonNetwork.LeaveRoom();
         PhotonChatManager.Instance.LeaveChannel(PhotonNetwork.CurrentRoom.Name);
         PanelManager.Instance.InitPanel((int)Panel.enterDelayPanel);
@@ -79,10 +56,15 @@ public class RoomManager : MonoBehaviourPunCallbacks
     {
         PhotonChatManager.Instance.ConnectToServer(PhotonNetwork.CurrentRoom.Name); // 채팅 서버 연결
 
-        roomNameText.text = PhotonNetwork.CurrentRoom.Name; // 방 이름 설정
+        playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name; // 방 이름 설정
         UpdateOtherInfo();
 
-        PhotonNetwork.Instantiate("PhotonPlayer", Vector3.zero, Quaternion.identity); // RPC쓸 포톤 프리팹 생성
+        // 커스텀 품 프로퍼티 속성 설정 (게임 실행 중인지 아닌지)
+        if(PhotonNetwork.IsMasterClient)
+        {
+            PhotonManager.Instance.roomProperties["ing"] = false;
+            PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
+        }
 
         if (PhotonNetwork.MasterClient == PhotonNetwork.LocalPlayer) // 방장이라면 게임시작 & 설정창 보이게
         {
@@ -91,10 +73,10 @@ public class RoomManager : MonoBehaviourPunCallbacks
             PhotonManager.Instance.SetCustomProperty();
             readyOrStartTMP.text = "게임 시작";
 
-            stateText.color = masterColor;
-            stateText.text = "회의 위원장";
+            playManager.stateText.color = masterColor;
+            playManager.stateText.text = "회의 위원장";
 
-            readyButton.interactable = false;
+            playManager.readyButton.interactable = false;
         }
         else
         {
@@ -103,11 +85,11 @@ public class RoomManager : MonoBehaviourPunCallbacks
             PhotonManager.Instance.SetCustomProperty();
             readyOrStartTMP.text = "게임 준비";
 
-            stateText.color = nonReadyColor;
-            stateText.text = "회의장으로 가는 중...";
+            playManager.stateText.color = nonReadyColor;
+            playManager.stateText.text = "회의장으로 가는 중...";
 
 
-            readyButton.interactable = true;
+            playManager.readyButton.interactable = true;
         }
 
         PanelManager.Instance.InitPanel((int)Panel.roomPanel);
@@ -135,16 +117,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom() // 방을 떠났을 시
     {
-        PhotonManager.Instance.playerProperties["ready"] = false;
-        PhotonManager.Instance.SetCustomProperty();
-
-        // 내꺼 채팅 정보 지우기
-        chatObj.SetActive(false);
-        chatText.text = "";
-
-        InitChatObj(); // 다른 사람 채팅 정보 지우기
-
-        NameStateListInit(); // 이름 상태 텍스트 비우기
+        
     }
 
     public void UpdateOtherInfo() // 방에 있는 사람 목록 업데이트
@@ -162,16 +135,16 @@ public class RoomManager : MonoBehaviourPunCallbacks
             PhotonManager.Instance.playerProperties["ready"] = true;
             readyOrStartTMP.text = "준비 취소";
 
-            stateText.color = readyColor;
-            stateText.text = "입법 회의 준비 완료";
+            playManager.stateText.color = readyColor;
+            playManager.stateText.text = "입법 회의 준비 완료";
         }
         else // 레디 상태라면
         {
             PhotonManager.Instance.playerProperties["ready"] = false;
             readyOrStartTMP.text = "게임 준비";
 
-            stateText.color = nonReadyColor;
-            stateText.text = "회의장으로 가는 중...";
+            playManager.stateText.color = nonReadyColor;
+            playManager.stateText.text = "회의장으로 가는 중...";
         }
 
         PhotonManager.Instance.SetCustomProperty();
@@ -181,7 +154,23 @@ public class RoomManager : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.MasterClient != PhotonNetwork.LocalPlayer) return; // 방장이 아니라면 반환
 
-        // 게임 시작
+        playManager.readyButton.interactable = false;
+        playManager.outButton.interactable = false;
+
+        PickPosition(); // 역할 뽑기
+    }
+
+    private void PickPosition() // 역할 뽑기
+    {
+        // 방장이 아닌 다른 사용자 버튼도 비활성화
+        // 룸 커스텀 프로퍼티에 겜 중이면 비활성화 되도록 지정
+        PhotonManager.Instance.roomProperties["ing"] = true;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
+
+        playManager.StateInitForGameStartRPC(); // 상태 지우기
+        playManager.PickPosition(); // 역할 뽑기
+        playManager.SendPickPositionRPC(); // 뽑은 거 알림
+        playManager.ShowPositionRPC(); // 역할 보여주기
     }
 
     private void CheckAllReady()
@@ -198,11 +187,11 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.LocalPlayer.IsMasterClient && readyCnt != PhotonNetwork.CurrentRoom.MaxPlayers) // 전원이 레디를 안 했다면 반환
         {
-            readyButton.interactable = false;
+            playManager.readyButton.interactable = false;
             return;
         }
 
-        readyButton.interactable = true;
+        playManager.readyButton.interactable = true;
     }
 
     
@@ -213,40 +202,18 @@ public class RoomManager : MonoBehaviourPunCallbacks
         CheckAllReady();
     }
 
-    public void GetCurrentUserInfo() // 여기서 말풍선도 지정해줘야 될 듯
+    public void GetCurrentUserInfo()
     {
         int index = 0;
         foreach (KeyValuePair<int, Player> player in PhotonNetwork.CurrentRoom.Players)
         {
             if (player.Value != PhotonNetwork.LocalPlayer)
             {
-                /*
-                otherNameTexts[index].text = player.Value.NickName;
+                playManager.nameCards[index].transform.position = playManager.cardTrans[index].position;
+                playManager.nameCards[index].SetActive(true);
+                playManager.cardDictionary[player.Value.NickName] = playManager.nameCards[index];
 
-                chatDictionary[player.Value.NickName] = (chatObjList[index], otherChatTexts[index]);
-
-                if(player.Value.IsMasterClient)
-                {
-                    otherStateTexts[index].color = masterColor;
-                    otherStateTexts[index].text = "회의 위원장";
-                }
-                else if ((bool)player.Value.CustomProperties["ready"])
-                {
-                    otherStateTexts[index].color = readyColor;
-                    otherStateTexts[index].text = "입법 회의 준비 완료";
-                }
-                else
-                {
-                    otherStateTexts[index].color = nonReadyColor;
-                    otherStateTexts[index].text = "회의장으로 가는 중...";
-                }
-                */
-
-                nameCards[index].transform.position = cardTrans[index].position;
-                nameCards[index].SetActive(true);
-                cardDictionary[player.Value.NickName] = nameCards[index];
-
-                Text[] texts = nameCards[index].GetComponentsInChildren<Text>(); // 0: name, 1: state
+                Text[] texts = playManager.nameCards[index].GetComponentsInChildren<Text>(); // 0: name, 1: state
 
                 texts[0].text = player.Value.NickName;
 
@@ -273,37 +240,13 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     private void NameStateListInit()
     {
-        /*
-        foreach (Text name in otherNameTexts)
-        {
-            name.text = "";
-        }
-
-        foreach (Text state in otherStateTexts)
-        {
-            state.text = "";
-        }
-
-        foreach(Text chat in otherChatTexts)
-        {
-            chat.text = "";
-        }
-
-        foreach(GameObject obj in chatObjList)
-        {
-            obj.SetActive(false);
-        }
-
-        chatDictionary.Clear();
-        */
-
         // 카드 비활성화 필요
-        foreach(var card in cardDictionary)
+        foreach(var card in playManager.cardDictionary)
         {
             card.Value.SetActive(false);
         }
 
-        cardDictionary.Clear();
+        playManager.cardDictionary.Clear();
     }
 
     public override void OnMasterClientSwitched(Player newMasterClient)
@@ -315,9 +258,9 @@ public class RoomManager : MonoBehaviourPunCallbacks
             PhotonManager.Instance.SetCustomProperty();
             readyOrStartTMP.text = "게임 시작";
 
-            stateText.color = masterColor;
-            stateText.text = "회의 위원장";
-            readyButton.interactable = false;
+            playManager.stateText.color = masterColor;
+            playManager.stateText.text = "회의 위원장";
+            playManager.readyButton.interactable = false;
         }
         else
         {
@@ -326,19 +269,19 @@ public class RoomManager : MonoBehaviourPunCallbacks
             PhotonManager.Instance.SetCustomProperty();
             readyOrStartTMP.text = "게임 준비";
 
-            stateText.color = nonReadyColor;
-            stateText.text = "회의장으로 가는 중...";
+            playManager.stateText.color = nonReadyColor;
+            playManager.stateText.text = "회의장으로 가는 중...";
         }
     }
 
     public void SendChattingMessage(string s) // 채팅 보내기
     {
-        chatText.text = s;
+        playManager.chatText.text = s;
         StartCoroutine(ShowMyChatImageAnim());
         PhotonChatManager.Instance.SendChat(s);
     }
 
-    public void ShowChatImage(string name)
+    public void ShowChatImage(string name) // 채팅 이미지 보이기
     {
         if(name != DatabaseManager.Instance.name)
         {
@@ -346,34 +289,43 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-    private void InitChatObj()
+    private void InitChatObj() // 방에서 나갈 때 채팅 텍스트 초기화 & 이미지 비활성화
     {
-        foreach(var cardObj in cardDictionary)
+        foreach(var cardObj in playManager.cardDictionary)
         {
             GameObject chatObj = cardObj.Value.transform.GetChild(2).gameObject;
 
-            Text chat = chatObj.GetComponent<Text>();
+            Text chat = chatObj.GetComponentInChildren<Text>();
             chat.text = "";
             chatObj.SetActive(false);
         }
     }
 
+    private void CleanTextAfterSendChat(string s)
+    {
+        playManager.chatInputField.text = "";
+    }
+
+    // 커스텀 룸 프로퍼티 변경 시 호출
+    public override void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
+    {
+        PhotonHashtable hashTable = PhotonNetwork.CurrentRoom.CustomProperties;
+
+        if ((bool)hashTable["ing"])
+        {
+            playManager.readyButton.interactable = false;
+            playManager.outButton.interactable = false;
+        }
+        else if(!(bool)hashTable["ing"])
+        {
+            playManager.readyButton.interactable = true;
+            playManager.outButton.interactable = true;
+        }
+    }
 
     private IEnumerator ShowChatImageAnim(string name)
     {
-        /*
-        chatDictionary[name].Item1.SetActive(true);
-
-        yield return new WaitForSeconds(3f);
-
-        if(PhotonNetwork.InRoom)
-        {
-            chatDictionary[name].Item1.SetActive(false);
-            chatDictionary[name].Item2.text = "";
-        }
-        */
-
-        GameObject chatObj = cardDictionary[name].transform.GetChild(2).gameObject;
+        GameObject chatObj = playManager.cardDictionary[name].transform.GetChild(2).gameObject;
         chatObj.SetActive(true);
 
         yield return new WaitForSeconds(3f);
@@ -388,14 +340,14 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     private IEnumerator ShowMyChatImageAnim()
     {
-        chatObj.SetActive(true);
+        playManager.chatObj.SetActive(true);
 
         yield return new WaitForSeconds(3f);
 
         if (PhotonNetwork.InRoom)
         {
-            chatObj.SetActive(false);
-            chatText.text = "";
+            playManager.chatObj.SetActive(false);
+            playManager.chatText.text = "";
         }
     }
 }

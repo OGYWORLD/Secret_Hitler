@@ -12,11 +12,12 @@ using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 public class PhotonManager : MonoBehaviourPunCallbacks
 {
     public static PhotonManager Instance { get; set; }
-    public Dictionary<int, (int, int)> cntDictionary { get; set; } = new Dictionary<int, (int, int)>(); // 인원수에 따른 리버럴 파시스트 인원수
+    public Dictionary<int, (int, int)> cntDictionary { get; set; } = new Dictionary<int, (int, int)>(); // 인원수에 따른 리버럴, 파시스트 인원수
 
     public List<RoomInfo> roomList { get; set; } = new List<RoomInfo>();
 
     public PhotonHashtable playerProperties { get; set; } = new PhotonHashtable();
+    public PhotonHashtable roomProperties { get; set; } = new PhotonHashtable();
 
     private void Awake()
     {
@@ -38,9 +39,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         cntDictionary[9] = (5, 4);
         cntDictionary[10] = (6, 4);
 
-        // 커스텀 플레이어 프로퍼티 속성 설정
+        // 커스텀 플레이어 프로퍼티 속성 설정 (레디 상태)
         playerProperties["ready"] = false;
-
         PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
     }
 
