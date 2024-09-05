@@ -3,6 +3,7 @@ using ExitGames.Client.Photon;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Photon.Pun;
 
 public class PhotonChatManager : MonoBehaviour, IChatClientListener
@@ -57,7 +58,10 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
         {
             if(senders[i] != DatabaseManager.Instance.data.name)
             {
-                roomManager.chatDictionary[senders[i]].Item2.text = (string)messages[i];
+                GameObject chatObj = roomManager.cardDictionary[senders[i]].transform.GetChild(2).gameObject;
+                Text t = chatObj.GetComponentInChildren<Text>();
+
+                t.text = (string)messages[i];
                 roomManager.ShowChatImage(senders[i]);
             }
         }

@@ -16,10 +16,10 @@ MonoBehaviour:
     AppIdRealtime: 86e9fc56-4dbf-42a4-b7b3-aead1f059ff0
     AppIdFusion: 
     AppIdChat: 302e7286-36d7-4ed6-9b92-d83ae22b6a52
-    AppIdVoice: 
+    AppIdVoice: 0e5b5b99-236b-47dc-870c-6ad7c31af606
     AppVersion: 
     UseNameServer: 1
-    FixedRegion: 
+    FixedRegion: kr
     Server: 
     Port: 0
     ProxyServer: 
@@ -41,6 +41,9 @@ MonoBehaviour:
   - RespawnSpaceship
   - SendText
   - GetActorNumber
+  - CantHearYou
+  - ChangeColour
+  - HeresWhy
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

@@ -14,15 +14,18 @@ public class RoomManager : MonoBehaviourPunCallbacks
     public GameObject chatObj;
 
     public GameObject[] nameCards;
+    public Transform[] cardTrans;
 
     public TMP_InputField chatInputField;
 
-    private List<Text> otherNameTexts = new List<Text>();
-    private List<Text> otherStateTexts = new List<Text>();
-    private List<Text> otherChatTexts = new List<Text>();
+    //private List<Text> otherNameTexts = new List<Text>();
+    //private List<Text> otherStateTexts = new List<Text>();
+    //private List<Text> otherChatTexts = new List<Text>();
 
-    public Dictionary<string, (GameObject, Text)> chatDictionary = new Dictionary<string, (GameObject, Text)>(); // <닉네임, (채팅obj, 채팅창)>
-    private List<GameObject> chatObjList = new List<GameObject>();
+    //public Dictionary<string, (GameObject, Text)> chatDictionary = new Dictionary<string, (GameObject, Text)>(); // <닉네임, (채팅obj, 채팅창)>
+    //private List<GameObject> chatObjList = new List<GameObject>();
+
+    public Dictionary<string, GameObject> cardDictionary = new Dictionary<string, GameObject>();
 
     public Button readyButton;
     public Button outButton;
@@ -42,6 +45,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private void Start()
     {
         // 이름이랑 상태(레디) 받아오기
+        /*
         for(int i = 0; i < nameCards.Length; i++)
         {
             Text[] texts = nameCards[i].GetComponentsInChildren<Text>();
@@ -54,6 +58,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             Text t = obj.GetComponentInChildren<Text>();
             otherChatTexts.Add(t);
         }
+        */
 
         outButton.onClick.AddListener(OnPlayerChoiceLeftRoom);
         readyButton.onClick.AddListener(SetReady);
@@ -137,7 +142,9 @@ public class RoomManager : MonoBehaviourPunCallbacks
         chatObj.SetActive(false);
         chatText.text = "";
 
-        NameStateListInit();
+        InitChatObj(); // 다른 사람 채팅 정보 지우기
+
+        NameStateListInit(); // 이름 상태 텍스트 비우기
     }
 
     public void UpdateOtherInfo() // 방에 있는 사람 목록 업데이트
@@ -213,6 +220,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         {
             if (player.Value != PhotonNetwork.LocalPlayer)
             {
+                /*
                 otherNameTexts[index].text = player.Value.NickName;
 
                 chatDictionary[player.Value.NickName] = (chatObjList[index], otherChatTexts[index]);
@@ -232,6 +240,31 @@ public class RoomManager : MonoBehaviourPunCallbacks
                     otherStateTexts[index].color = nonReadyColor;
                     otherStateTexts[index].text = "회의장으로 가는 중...";
                 }
+                */
+
+                nameCards[index].transform.position = cardTrans[index].position;
+                nameCards[index].SetActive(true);
+                cardDictionary[player.Value.NickName] = nameCards[index];
+
+                Text[] texts = nameCards[index].GetComponentsInChildren<Text>(); // 0: name, 1: state
+
+                texts[0].text = player.Value.NickName;
+
+                if (player.Value.IsMasterClient)
+                {
+                    texts[1].color = masterColor;
+                    texts[1].text = "회의 위원장";
+                }
+                else if ((bool)player.Value.CustomProperties["ready"])
+                {
+                    texts[1].color = readyColor;
+                    texts[1].text = "입법 회의 준비 완료";
+                }
+                else
+                {
+                    texts[1].color = nonReadyColor;
+                    texts[1].text = "회의장으로 가는 중...";
+                }
 
                 index++;
             }
@@ -240,6 +273,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     private void NameStateListInit()
     {
+        /*
         foreach (Text name in otherNameTexts)
         {
             name.text = "";
@@ -261,6 +295,15 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
 
         chatDictionary.Clear();
+        */
+
+        // 카드 비활성화 필요
+        foreach(var card in cardDictionary)
+        {
+            card.Value.SetActive(false);
+        }
+
+        cardDictionary.Clear();
     }
 
     public override void OnMasterClientSwitched(Player newMasterClient)
@@ -303,8 +346,22 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
     }
 
+    private void InitChatObj()
+    {
+        foreach(var cardObj in cardDictionary)
+        {
+            GameObject chatObj = cardObj.Value.transform.GetChild(2).gameObject;
+
+            Text chat = chatObj.GetComponent<Text>();
+            chat.text = "";
+            chatObj.SetActive(false);
+        }
+    }
+
+
     private IEnumerator ShowChatImageAnim(string name)
     {
+        /*
         chatDictionary[name].Item1.SetActive(true);
 
         yield return new WaitForSeconds(3f);
@@ -313,6 +370,19 @@ public class RoomManager : MonoBehaviourPunCallbacks
         {
             chatDictionary[name].Item1.SetActive(false);
             chatDictionary[name].Item2.text = "";
+        }
+        */
+
+        GameObject chatObj = cardDictionary[name].transform.GetChild(2).gameObject;
+        chatObj.SetActive(true);
+
+        yield return new WaitForSeconds(3f);
+
+        if (PhotonNetwork.InRoom)
+        {
+            Text chatText = chatObj.GetComponentInChildren<Text>();
+            chatObj.SetActive(false);
+            chatText.text = "";
         }
     }
 
