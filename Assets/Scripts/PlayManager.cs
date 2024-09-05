@@ -35,22 +35,29 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴려다가 든
 
     public int[] totalPosition { get; set; }
     private List<bool> isSelected = new List<bool>();
-    public Position myPosition { get; set; }
 
     public Image fadeImage;
 
-    public Sprite[] posCardImg;
+    public Sprite[] posCardImg; // 신분 카드
 
     public GameObject posInfoTextObj; // 당신의 신분은?
     public GameObject[] posObj; // 신분 정보 오브젝트 (0: 리버럴, 1: 파시스트, 2: 히틀러)
+    public Text[] pacistListTexts; // 역할 공개 장면 파시스트 리스트
 
-    private void OnEnable()
+
+    public void Init()
     {
         // 페이드인아웃 용 이미지 알파값 0으로 초기화
         Color color = fadeImage.color;
         color.a = 0;
         fadeImage.color = color;
+
+        foreach(Text t in pacistListTexts)
+        {
+            t.text = "";
+        }
     }
+
 
     public void PickPosition() // 역할 뽑기
     {
@@ -118,19 +125,13 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴려다가 든
         view.RPC("StateInitForGameStart", RpcTarget.All);
     }
 
-    [PunRPC]
-    public void PickPosition(Position p, int[] posArray)
-    {
-        totalPosition = posArray;
-        myPosition = p;
-    }
-
-    public void SendPickPositionRPC()
+    public void SendPickPosition()
     {
         int index = 0;
         foreach (var player in PhotonNetwork.CurrentRoom.Players)
         {
-            view.RPC("PickPosition", player.Value, totalPosition[index], totalPosition);
+            PhotonManager.Instance.playerProperties["position"] = (Position)totalPosition[index];
+            player.Value.SetCustomProperties(PhotonManager.Instance.playerProperties);
             index++;
         }
     }
@@ -144,6 +145,17 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴려다가 든
     public void ShowPosition()
     {
         StartCoroutine(FadeInOut());
+    }
+
+    public void KickAllPlayerRPC()
+    {
+        view.RPC("KickOut", RpcTarget.All);
+    }
+
+    [PunRPC]
+    public void KickOut()
+    {
+        PhotonNetwork.LeaveRoom();
     }
 
     private IEnumerator FadeInOut()
@@ -167,12 +179,26 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴려다가 든
         fadeImage.color = color;
 
         posInfoTextObj.SetActive(true);
-        posObj[(int)myPosition].SetActive(true);
+        posObj[(int)PhotonNetwork.LocalPlayer.CustomProperties["position"]].SetActive(true);
+
+        if((Position)PhotonNetwork.LocalPlayer.CustomProperties["position"] == Position.pacist) // 파시스트일 경우 리스트도 출력
+        {
+            int index = 0;
+            foreach(Player player in PhotonNetwork.CurrentRoom.Players.Values)
+            {
+                if(player != PhotonNetwork.LocalPlayer && (Position)player.CustomProperties["position"] == Position.pacist)
+                {
+                    pacistListTexts[index].text = player.NickName;
+                    index++;
+                }
+            }
+        
+        }
 
         yield return new WaitForSeconds(3f);
 
         posInfoTextObj.SetActive(false);
-        posObj[(int)myPosition].SetActive(false);
+        posObj[(int)PhotonNetwork.LocalPlayer.CustomProperties["position"]].SetActive(false);
 
         sumTime = 0f;
 

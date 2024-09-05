@@ -59,8 +59,12 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name; // 방 이름 설정
         UpdateOtherInfo();
 
+        // 버튼들 활성화
+        playManager.readyButton.gameObject.SetActive(true);
+        playManager.outButton.gameObject.SetActive(true);
+
         // 커스텀 품 프로퍼티 속성 설정 (게임 실행 중인지 아닌지)
-        if(PhotonNetwork.IsMasterClient)
+        if (PhotonNetwork.IsMasterClient)
         {
             PhotonManager.Instance.roomProperties["ing"] = false;
             PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
@@ -109,6 +113,14 @@ public class RoomManager : MonoBehaviourPunCallbacks
     {
         UpdateOtherInfo();
 
+        if((bool)PhotonNetwork.CurrentRoom.CustomProperties["ing"]) // 게임 중에 방을 떠나면 게임 종료
+        {
+            if(PhotonNetwork.IsMasterClient) // 모두 내보냄
+            {
+                playManager.KickAllPlayerRPC();
+            }
+        }
+
         if (PhotonNetwork.LocalPlayer.IsMasterClient)
         {
             CheckAllReady();
@@ -154,8 +166,9 @@ public class RoomManager : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.MasterClient != PhotonNetwork.LocalPlayer) return; // 방장이 아니라면 반환
 
-        playManager.readyButton.interactable = false;
-        playManager.outButton.interactable = false;
+        // 버튼 비활성화
+        playManager.readyButton.gameObject.SetActive(false);
+        playManager.outButton.gameObject.SetActive(false);
 
         PickPosition(); // 역할 뽑기
     }
@@ -167,9 +180,10 @@ public class RoomManager : MonoBehaviourPunCallbacks
         PhotonManager.Instance.roomProperties["ing"] = true;
         PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
 
+        playManager.Init(); // 페이드 이미지, 파시스트 목록 등 초기화
         playManager.StateInitForGameStartRPC(); // 상태 지우기
         playManager.PickPosition(); // 역할 뽑기
-        playManager.SendPickPositionRPC(); // 뽑은 거 알림
+        playManager.SendPickPosition(); // 뽑은 거 알림
         playManager.ShowPositionRPC(); // 역할 보여주기
     }
 
@@ -313,13 +327,15 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         if ((bool)hashTable["ing"])
         {
-            playManager.readyButton.interactable = false;
-            playManager.outButton.interactable = false;
+            playManager.roomNameText.text = "";
+            playManager.readyButton.gameObject.SetActive(false);
+            playManager.outButton.gameObject.SetActive(false);
         }
         else if(!(bool)hashTable["ing"])
         {
-            playManager.readyButton.interactable = true;
-            playManager.outButton.interactable = true;
+            playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name;
+            playManager.readyButton.gameObject.SetActive(true);
+            playManager.outButton.gameObject.SetActive(true);
         }
     }
 
