@@ -44,20 +44,45 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴려다가 든
     public GameObject[] posObj; // 신분 정보 오브젝트 (0: 리버럴, 1: 파시스트, 2: 히틀러)
     public Text[] pacistListTexts; // 역할 공개 장면 파시스트 리스트
 
-
-    public void Init()
+    public GameObject[] pacistBoads; // 파시스트 보드판 0: 5~6, 1: 7~8, 2: 9~10
+    
+    public void InitWhenJoinedRoom()
     {
+        // 보드판 인원수에 맞게 등장
+        foreach(GameObject board in pacistBoads)
+        {
+            board.SetActive(false);
+        }
+
+        if(PhotonNetwork.CurrentRoom.MaxPlayers == 5 || PhotonNetwork.CurrentRoom.MaxPlayers == 6)
+        {
+            pacistBoads[0].SetActive(true);
+        }
+
+        if (PhotonNetwork.CurrentRoom.MaxPlayers == 7 || PhotonNetwork.CurrentRoom.MaxPlayers == 8)
+        {
+            pacistBoads[1].SetActive(true);
+        }
+
+        if (PhotonNetwork.CurrentRoom.MaxPlayers == 9 || PhotonNetwork.CurrentRoom.MaxPlayers == 10)
+        {
+            pacistBoads[2].SetActive(true);
+        }
+
         // 페이드인아웃 용 이미지 알파값 0으로 초기화
         Color color = fadeImage.color;
         color.a = 0;
         fadeImage.color = color;
 
-        foreach(Text t in pacistListTexts)
+        foreach (Text t in pacistListTexts)
         {
             t.text = "";
         }
-    }
 
+        // 버튼들 활성화
+        readyButton.gameObject.SetActive(true);
+        outButton.gameObject.SetActive(true);
+    }
 
     public void PickPosition() // 역할 뽑기
     {

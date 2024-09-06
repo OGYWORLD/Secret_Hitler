@@ -59,6 +59,8 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name; // 방 이름 설정
         UpdateOtherInfo();
 
+        playManager.InitWhenJoinedRoom(); // 오브젝트 초기화
+
         // 버튼들 활성화
         playManager.readyButton.gameObject.SetActive(true);
         playManager.outButton.gameObject.SetActive(true);
@@ -180,7 +182,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
         PhotonManager.Instance.roomProperties["ing"] = true;
         PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
 
-        playManager.Init(); // 페이드 이미지, 파시스트 목록 등 초기화
         playManager.StateInitForGameStartRPC(); // 상태 지우기
         playManager.PickPosition(); // 역할 뽑기
         playManager.SendPickPosition(); // 뽑은 거 알림
