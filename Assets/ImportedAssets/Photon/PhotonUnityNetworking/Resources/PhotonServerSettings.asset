@@ -51,6 +51,9 @@ MonoBehaviour:
   - ShowPosition
   - StateInitForGameStart
   - KickOut
+  - SetPositionCard
+  - PassPlayerOrder
+  - PassPSufflePolicy
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

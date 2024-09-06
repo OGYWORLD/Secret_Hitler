@@ -18,6 +18,8 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private Color readyColor = new Color(112f/255f, 1f, 249f/255f);
     private Color nonReadyColor = new Color(188/255f, 188 / 255f, 188 / 255f);
 
+    private int maxPlayer; // 모든 인원에 대한 커스텀 플레이어 프로퍼티 수정 콜백함수가 호출됐는지 카운트하기 위한 변수
+
     private void Awake()
     {
         playManager.chatInputField.onEndEdit.AddListener(SendChattingMessage);
@@ -172,6 +174,10 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.readyButton.gameObject.SetActive(false);
         playManager.outButton.gameObject.SetActive(false);
 
+        playManager.SufflePolicy(); // 정책카드 섞기
+        playManager.PassSufflePolicyRPC(playManager.policyArray); // 섞은 거 RPC로 전달
+        playManager.SetPlayerOrder(); // 플레이 순서 정하기
+        playManager.PassPlayerOrderRPC(playManager.playerOrder); // 순서 모두에게 저장
         PickPosition(); // 역할 뽑기
     }
 
@@ -185,7 +191,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.StateInitForGameStartRPC(); // 상태 지우기
         playManager.PickPosition(); // 역할 뽑기
         playManager.SendPickPosition(); // 뽑은 거 알림
-        playManager.ShowPositionRPC(); // 역할 보여주기
     }
 
     private void CheckAllReady()
@@ -210,11 +215,31 @@ public class RoomManager : MonoBehaviourPunCallbacks
     }
 
     
-    // 레디 상태가 변했다면 state를 바꿔주기
+    // 플레이어 커스텀 프로퍼티가 변경됐다면 호출되는 콜백함수
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
     {
-        UpdateOtherInfo();
-        CheckAllReady();
+        if(changedProps.ContainsKey("ready")) // 레디 상태가 변했다면 state를 바꿔주기
+        {
+            UpdateOtherInfo();
+            CheckAllReady();
+        }
+
+        if(changedProps.ContainsKey("position")) // 역할이 정해졌다면 포지션 카드 스프라이트 변경
+        {
+            maxPlayer++;
+            playManager.SetPositionCard(targetPlayer);
+        }
+
+        if(maxPlayer == PhotonNetwork.CurrentRoom.MaxPlayers) // 모든 플레이어의 포지션이 정해졌다면
+        {
+            maxPlayer = 0;
+
+            // 첫 번째 대통령 지정
+            PhotonManager.Instance.roomProperties["president"] = PhotonNetwork.CurrentRoom.Players[playManager.playerOrder[0]];
+            PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
+
+            playManager.ShowPositionRPC(); // 역할 보여주기
+        }
     }
 
     public void GetCurrentUserInfo()
@@ -264,7 +289,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.cardDictionary.Clear();
     }
 
-    public override void OnMasterClientSwitched(Player newMasterClient)
+    public override void OnMasterClientSwitched(Player newMasterClient) // 마스터 클라이언트가 변경되었다면
     {
         if (newMasterClient == PhotonNetwork.LocalPlayer) // 방장이라면 게임시작 & 설정창 보이게
         {
@@ -326,13 +351,14 @@ public class RoomManager : MonoBehaviourPunCallbacks
     {
         PhotonHashtable hashTable = PhotonNetwork.CurrentRoom.CustomProperties;
 
-        if ((bool)hashTable["ing"])
+        // 레디 상태 여부에 따른 제목, 레디 버튼, 나가기 버튼 활성화 설정
+        if ((bool)hashTable["ing"]) // 현재 게임 중이라면
         {
             playManager.roomNameText.text = "";
             playManager.readyButton.gameObject.SetActive(false);
             playManager.outButton.gameObject.SetActive(false);
         }
-        else if(!(bool)hashTable["ing"])
+        else if(!(bool)hashTable["ing"]) // 현재 게임 중이 아니라면
         {
             playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name;
             playManager.readyButton.gameObject.SetActive(true);
