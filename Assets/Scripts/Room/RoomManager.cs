@@ -1,4 +1,4 @@
-using Photon.Pun;
+ï»¿using Photon.Pun;
 using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private Color readyColor = new Color(112f/255f, 1f, 249f/255f);
     private Color nonReadyColor = new Color(188/255f, 188 / 255f, 188 / 255f);
 
-    private int maxPlayer; // ¸ğµç ÀÎ¿ø¿¡ ´ëÇÑ Ä¿½ºÅÒ ÇÃ·¹ÀÌ¾î ÇÁ·ÎÆÛÆ¼ ¼öÁ¤ Äİ¹éÇÔ¼ö°¡ È£ÃâµÆ´ÂÁö Ä«¿îÆ®ÇÏ±â À§ÇÑ º¯¼ö
+    private int maxPlayer; // ëª¨ë“  ì¸ì›ì— ëŒ€í•œ ì»¤ìŠ¤í…€ í”Œë ˆì´ì–´ í”„ë¡œí¼í‹° ìˆ˜ì • ì½œë°±í•¨ìˆ˜ê°€ í˜¸ì¶œëëŠ”ì§€ ì¹´ìš´íŠ¸í•˜ê¸° ìœ„í•œ ë³€ìˆ˜
 
     private void Awake()
     {
@@ -36,53 +36,53 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.settingButtonObj.SetActive(false);
     }
 
-    private void OnPlayerChoiceLeftRoom() // ³ª°¡±â ¹öÆ°À» ´­·¶À» ¶§
+    private void OnPlayerChoiceLeftRoom() // ë‚˜ê°€ê¸° ë²„íŠ¼ì„ ëˆŒë €ì„ ë•Œ
     {
         PhotonManager.Instance.playerProperties["ready"] = false;
         PhotonManager.Instance.SetCustomProperty();
 
-        // ³»²¨ Ã¤ÆÃ Á¤º¸ Áö¿ì±â
+        // ë‚´êº¼ ì±„íŒ… ì •ë³´ ì§€ìš°ê¸°
         playManager.chatObj.SetActive(false);
         playManager.chatText.text = "";
 
-        InitChatObj(); // ´Ù¸¥ »ç¶÷ Ã¤ÆÃ Á¤º¸ Áö¿ì±â
+        InitChatObj(); // ë‹¤ë¥¸ ì‚¬ëŒ ì±„íŒ… ì •ë³´ ì§€ìš°ê¸°
 
-        NameStateListInit(); // ÀÌ¸§ »óÅÂ ÅØ½ºÆ® ºñ¿ì±â
+        NameStateListInit(); // ì´ë¦„ ìƒíƒœ í…ìŠ¤íŠ¸ ë¹„ìš°ê¸°
 
         PhotonNetwork.LeaveRoom();
         PhotonChatManager.Instance.LeaveChannel(PhotonNetwork.CurrentRoom.Name);
         PanelManager.Instance.InitPanel((int)Panel.enterDelayPanel);
     }
 
-    public override void OnJoinedRoom() // ¹æ ÀÔÀåÇßÀ» ½Ã
+    public override void OnJoinedRoom() // ë°© ì…ì¥í–ˆì„ ì‹œ
     {
-        PhotonChatManager.Instance.ConnectToServer(PhotonNetwork.CurrentRoom.Name); // Ã¤ÆÃ ¼­¹ö ¿¬°á
+        PhotonChatManager.Instance.ConnectToServer(PhotonNetwork.CurrentRoom.Name); // ì±„íŒ… ì„œë²„ ì—°ê²°
 
-        playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name; // ¹æ ÀÌ¸§ ¼³Á¤
+        playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name; // ë°© ì´ë¦„ ì„¤ì •
         UpdateOtherInfo();
 
-        playManager.InitWhenJoinedRoom(); // ¿ÀºêÁ§Æ® ÃÊ±âÈ­
+        playManager.InitWhenJoinedRoom(); // ì˜¤ë¸Œì íŠ¸ ì´ˆê¸°í™”
 
-        // ¹öÆ°µé È°¼ºÈ­
+        // ë²„íŠ¼ë“¤ í™œì„±í™”
         playManager.readyButton.gameObject.SetActive(true);
         playManager.outButton.gameObject.SetActive(true);
 
-        // Ä¿½ºÅÒ Ç° ÇÁ·ÎÆÛÆ¼ ¼Ó¼º ¼³Á¤ (°ÔÀÓ ½ÇÇà ÁßÀÎÁö ¾Æ´ÑÁö)
+        // ì»¤ìŠ¤í…€ í’ˆ í”„ë¡œí¼í‹° ì†ì„± ì„¤ì • (ê²Œì„ ì‹¤í–‰ ì¤‘ì¸ì§€ ì•„ë‹Œì§€)
         if (PhotonNetwork.IsMasterClient)
         {
             PhotonManager.Instance.roomProperties["ing"] = false;
             PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
         }
 
-        if (PhotonNetwork.MasterClient == PhotonNetwork.LocalPlayer) // ¹æÀåÀÌ¶ó¸é °ÔÀÓ½ÃÀÛ & ¼³Á¤Ã¢ º¸ÀÌ°Ô
+        if (PhotonNetwork.MasterClient == PhotonNetwork.LocalPlayer) // ë°©ì¥ì´ë¼ë©´ ê²Œì„ì‹œì‘ & ì„¤ì •ì°½ ë³´ì´ê²Œ
         {
             //settingButtonObj.SetActive(true);
             PhotonManager.Instance.playerProperties["ready"] = true;
             PhotonManager.Instance.SetCustomProperty();
-            readyOrStartTMP.text = "°ÔÀÓ ½ÃÀÛ";
+            readyOrStartTMP.text = "ê²Œì„ ì‹œì‘";
 
             playManager.stateText.color = masterColor;
-            playManager.stateText.text = "È¸ÀÇ À§¿øÀå";
+            playManager.stateText.text = "íšŒì˜ ìœ„ì›ì¥";
 
             playManager.readyButton.interactable = false;
         }
@@ -91,10 +91,10 @@ public class RoomManager : MonoBehaviourPunCallbacks
             //settingButtonObj.SetActive(false);
             PhotonManager.Instance.playerProperties["ready"] = false;
             PhotonManager.Instance.SetCustomProperty();
-            readyOrStartTMP.text = "°ÔÀÓ ÁØºñ";
+            readyOrStartTMP.text = "ê²Œì„ ì¤€ë¹„";
 
             playManager.stateText.color = nonReadyColor;
-            playManager.stateText.text = "È¸ÀÇÀåÀ¸·Î °¡´Â Áß...";
+            playManager.stateText.text = "íšŒì˜ì¥ìœ¼ë¡œ ê°€ëŠ” ì¤‘...";
 
 
             playManager.readyButton.interactable = true;
@@ -103,7 +103,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         PanelManager.Instance.InitPanel((int)Panel.roomPanel);
     }
 
-    public override void OnPlayerEnteredRoom(Player newPlayer) // ¹æ¿¡ ´©±º°¡ µé¾î¿ÔÀ» ½Ã
+    public override void OnPlayerEnteredRoom(Player newPlayer) // ë°©ì— ëˆ„êµ°ê°€ ë“¤ì–´ì™”ì„ ì‹œ
     {
         UpdateOtherInfo();
 
@@ -113,13 +113,13 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public override void OnPlayerLeftRoom(Player otherPlayer) // ¹æ¿¡ ´©±º°¡ ¶°³µÀ» ½Ã
+    public override void OnPlayerLeftRoom(Player otherPlayer) // ë°©ì— ëˆ„êµ°ê°€ ë– ë‚¬ì„ ì‹œ
     {
         UpdateOtherInfo();
 
-        if((bool)PhotonNetwork.CurrentRoom.CustomProperties["ing"]) // °ÔÀÓ Áß¿¡ ¹æÀ» ¶°³ª¸é °ÔÀÓ Á¾·á
+        if((bool)PhotonNetwork.CurrentRoom.CustomProperties["ing"]) // ê²Œì„ ì¤‘ì— ë°©ì„ ë– ë‚˜ë©´ ê²Œì„ ì¢…ë£Œ
         {
-            if(PhotonNetwork.IsMasterClient) // ¸ğµÎ ³»º¸³¿
+            if(PhotonNetwork.IsMasterClient) // ëª¨ë‘ ë‚´ë³´ëƒ„
             {
                 playManager.KickAllPlayerRPC();
             }
@@ -131,73 +131,73 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public override void OnLeftRoom() // ¹æÀ» ¶°³µÀ» ½Ã
+    public override void OnLeftRoom() // ë°©ì„ ë– ë‚¬ì„ ì‹œ
     {
         
     }
 
-    public void UpdateOtherInfo() // ¹æ¿¡ ÀÖ´Â »ç¶÷ ¸ñ·Ï ¾÷µ¥ÀÌÆ®
+    public void UpdateOtherInfo() // ë°©ì— ìˆëŠ” ì‚¬ëŒ ëª©ë¡ ì—…ë°ì´íŠ¸
     {
         NameStateListInit();
         GetCurrentUserInfo();
     }
 
-    public void SetReady() // ·¹µğÇÏ±â
+    public void SetReady() // ë ˆë””í•˜ê¸°
     {
-        if (PhotonNetwork.LocalPlayer.IsMasterClient) return; // ¹æÀåÀÌ¶ó¸é ¹İÈ¯
+        if (PhotonNetwork.LocalPlayer.IsMasterClient) return; // ë°©ì¥ì´ë¼ë©´ ë°˜í™˜
 
-        if ((bool)PhotonManager.Instance.playerProperties["ready"] == false) // ·¹µğ »óÅÂ°¡ ¾Æ´Ï¶ó¸é
+        if ((bool)PhotonManager.Instance.playerProperties["ready"] == false) // ë ˆë”” ìƒíƒœê°€ ì•„ë‹ˆë¼ë©´
         {
             PhotonManager.Instance.playerProperties["ready"] = true;
-            readyOrStartTMP.text = "ÁØºñ Ãë¼Ò";
+            readyOrStartTMP.text = "ì¤€ë¹„ ì·¨ì†Œ";
 
             playManager.stateText.color = readyColor;
-            playManager.stateText.text = "ÀÔ¹ı È¸ÀÇ ÁØºñ ¿Ï·á";
+            playManager.stateText.text = "ì…ë²• íšŒì˜ ì¤€ë¹„ ì™„ë£Œ";
         }
-        else // ·¹µğ »óÅÂ¶ó¸é
+        else // ë ˆë”” ìƒíƒœë¼ë©´
         {
             PhotonManager.Instance.playerProperties["ready"] = false;
-            readyOrStartTMP.text = "°ÔÀÓ ÁØºñ";
+            readyOrStartTMP.text = "ê²Œì„ ì¤€ë¹„";
 
             playManager.stateText.color = nonReadyColor;
-            playManager.stateText.text = "È¸ÀÇÀåÀ¸·Î °¡´Â Áß...";
+            playManager.stateText.text = "íšŒì˜ì¥ìœ¼ë¡œ ê°€ëŠ” ì¤‘...";
         }
 
         PhotonManager.Instance.SetCustomProperty();
     }
 
-    public void StartGame() // °ÔÀÓ ½ÃÀÛ
+    public void StartGame() // ê²Œì„ ì‹œì‘
     {
-        if (PhotonNetwork.MasterClient != PhotonNetwork.LocalPlayer) return; // ¹æÀåÀÌ ¾Æ´Ï¶ó¸é ¹İÈ¯
+        if (PhotonNetwork.MasterClient != PhotonNetwork.LocalPlayer) return; // ë°©ì¥ì´ ì•„ë‹ˆë¼ë©´ ë°˜í™˜
 
-        // ¹öÆ° ºñÈ°¼ºÈ­
+        // ë²„íŠ¼ ë¹„í™œì„±í™”
         playManager.readyButton.gameObject.SetActive(false);
         playManager.outButton.gameObject.SetActive(false);
 
-        playManager.SufflePolicy(); // Á¤Ã¥Ä«µå ¼¯±â
-        playManager.PassSufflePolicyRPC(playManager.policyArray); // ¼¯Àº °Å RPC·Î Àü´Ş
-        playManager.SetPlayerOrder(); // ÇÃ·¹ÀÌ ¼ø¼­ Á¤ÇÏ±â
-        playManager.PassPlayerOrderRPC(playManager.playerOrder); // ¼ø¼­ ¸ğµÎ¿¡°Ô ÀúÀå
-        PickPosition(); // ¿ªÇÒ »Ì±â
+        playManager.SufflePolicy(); // ì •ì±…ì¹´ë“œ ì„ê¸°
+        playManager.PassSufflePolicyRPC(playManager.policyArray); // ì„ì€ ê±° RPCë¡œ ì „ë‹¬
+        playManager.SetPlayerOrder(); // í”Œë ˆì´ ìˆœì„œ ì •í•˜ê¸°
+        playManager.PassPlayerOrderRPC(playManager.playerOrder); // ìˆœì„œ ëª¨ë‘ì—ê²Œ ì €ì¥
+        PickPosition(); // ì—­í•  ë½‘ê¸°
     }
 
-    private void PickPosition() // ¿ªÇÒ »Ì±â
+    private void PickPosition() // ì—­í•  ë½‘ê¸°
     {
-        // ¹æÀåÀÌ ¾Æ´Ñ ´Ù¸¥ »ç¿ëÀÚ ¹öÆ°µµ ºñÈ°¼ºÈ­
-        // ·ë Ä¿½ºÅÒ ÇÁ·ÎÆÛÆ¼¿¡ °× ÁßÀÌ¸é ºñÈ°¼ºÈ­ µÇµµ·Ï ÁöÁ¤
+        // ë°©ì¥ì´ ì•„ë‹Œ ë‹¤ë¥¸ ì‚¬ìš©ì ë²„íŠ¼ë„ ë¹„í™œì„±í™”
+        // ë£¸ ì»¤ìŠ¤í…€ í”„ë¡œí¼í‹°ì— ê²œ ì¤‘ì´ë©´ ë¹„í™œì„±í™” ë˜ë„ë¡ ì§€ì •
         PhotonManager.Instance.roomProperties["ing"] = true;
         PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
 
-        playManager.StateInitForGameStartRPC(); // »óÅÂ Áö¿ì±â
-        playManager.PickPosition(); // ¿ªÇÒ »Ì±â
-        playManager.SendPickPosition(); // »ÌÀº °Å ¾Ë¸²
+        playManager.PickPosition(); // ì—­í•  ë½‘ê¸°
+        playManager.SetPlayerCustomForPosition(); // ë½‘ì€ ì—­í•  í”„ë¡œí¼í‹° ì €ì¥
+        playManager.StateInitForGameStartRPC(); // ìƒíƒœ ì§€ìš°ê¸°
     }
 
     private void CheckAllReady()
     {
         int readyCnt = 0;
 
-        foreach (KeyValuePair<int, Player> player in PhotonNetwork.CurrentRoom.Players) // Àü¿øÀÌ ·¹µğ¸¦ Çß´ÂÁö È®ÀÎ
+        foreach (KeyValuePair<int, Player> player in PhotonNetwork.CurrentRoom.Players) // ì „ì›ì´ ë ˆë””ë¥¼ í–ˆëŠ”ì§€ í™•ì¸
         {
             if ((bool)player.Value.CustomProperties["ready"])
             {
@@ -205,41 +205,13 @@ public class RoomManager : MonoBehaviourPunCallbacks
             }
         }
 
-        if (PhotonNetwork.LocalPlayer.IsMasterClient && readyCnt != PhotonNetwork.CurrentRoom.MaxPlayers) // Àü¿øÀÌ ·¹µğ¸¦ ¾È Çß´Ù¸é ¹İÈ¯
+        if (PhotonNetwork.LocalPlayer.IsMasterClient && readyCnt != PhotonNetwork.CurrentRoom.MaxPlayers) // ì „ì›ì´ ë ˆë””ë¥¼ ì•ˆ í–ˆë‹¤ë©´ ë°˜í™˜
         {
             playManager.readyButton.interactable = false;
             return;
         }
 
         playManager.readyButton.interactable = true;
-    }
-
-    
-    // ÇÃ·¹ÀÌ¾î Ä¿½ºÅÒ ÇÁ·ÎÆÛÆ¼°¡ º¯°æµÆ´Ù¸é È£ÃâµÇ´Â Äİ¹éÇÔ¼ö
-    public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
-    {
-        if(changedProps.ContainsKey("ready")) // ·¹µğ »óÅÂ°¡ º¯Çß´Ù¸é state¸¦ ¹Ù²ãÁÖ±â
-        {
-            UpdateOtherInfo();
-            CheckAllReady();
-        }
-
-        if(changedProps.ContainsKey("position")) // ¿ªÇÒÀÌ Á¤ÇØÁ³´Ù¸é Æ÷Áö¼Ç Ä«µå ½ºÇÁ¶óÀÌÆ® º¯°æ
-        {
-            maxPlayer++;
-            playManager.SetPositionCard(targetPlayer);
-        }
-
-        if(maxPlayer == PhotonNetwork.CurrentRoom.MaxPlayers) // ¸ğµç ÇÃ·¹ÀÌ¾îÀÇ Æ÷Áö¼ÇÀÌ Á¤ÇØÁ³´Ù¸é
-        {
-            maxPlayer = 0;
-
-            // Ã¹ ¹øÂ° ´ëÅë·É ÁöÁ¤
-            PhotonManager.Instance.roomProperties["president"] = PhotonNetwork.CurrentRoom.Players[playManager.playerOrder[0]];
-            PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
-
-            playManager.ShowPositionRPC(); // ¿ªÇÒ º¸¿©ÁÖ±â
-        }
     }
 
     public void GetCurrentUserInfo()
@@ -260,17 +232,17 @@ public class RoomManager : MonoBehaviourPunCallbacks
                 if (player.Value.IsMasterClient)
                 {
                     texts[1].color = masterColor;
-                    texts[1].text = "È¸ÀÇ À§¿øÀå";
+                    texts[1].text = "íšŒì˜ ìœ„ì›ì¥";
                 }
                 else if ((bool)player.Value.CustomProperties["ready"])
                 {
                     texts[1].color = readyColor;
-                    texts[1].text = "ÀÔ¹ı È¸ÀÇ ÁØºñ ¿Ï·á";
+                    texts[1].text = "ì…ë²• íšŒì˜ ì¤€ë¹„ ì™„ë£Œ";
                 }
                 else
                 {
                     texts[1].color = nonReadyColor;
-                    texts[1].text = "È¸ÀÇÀåÀ¸·Î °¡´Â Áß...";
+                    texts[1].text = "íšŒì˜ì¥ìœ¼ë¡œ ê°€ëŠ” ì¤‘...";
                 }
 
                 index++;
@@ -280,7 +252,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     private void NameStateListInit()
     {
-        // Ä«µå ºñÈ°¼ºÈ­ ÇÊ¿ä
+        // ì¹´ë“œ ë¹„í™œì„±í™” í•„ìš”
         foreach(var card in playManager.cardDictionary)
         {
             card.Value.SetActive(false);
@@ -289,39 +261,14 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.cardDictionary.Clear();
     }
 
-    public override void OnMasterClientSwitched(Player newMasterClient) // ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®°¡ º¯°æµÇ¾ú´Ù¸é
-    {
-        if (newMasterClient == PhotonNetwork.LocalPlayer) // ¹æÀåÀÌ¶ó¸é °ÔÀÓ½ÃÀÛ & ¼³Á¤Ã¢ º¸ÀÌ°Ô
-        {
-            //settingButtonObj.SetActive(true);
-            PhotonManager.Instance.playerProperties["ready"] = true;
-            PhotonManager.Instance.SetCustomProperty();
-            readyOrStartTMP.text = "°ÔÀÓ ½ÃÀÛ";
-
-            playManager.stateText.color = masterColor;
-            playManager.stateText.text = "È¸ÀÇ À§¿øÀå";
-            playManager.readyButton.interactable = false;
-        }
-        else
-        {
-            //settingButtonObj.SetActive(false);
-            PhotonManager.Instance.playerProperties["ready"] = false;
-            PhotonManager.Instance.SetCustomProperty();
-            readyOrStartTMP.text = "°ÔÀÓ ÁØºñ";
-
-            playManager.stateText.color = nonReadyColor;
-            playManager.stateText.text = "È¸ÀÇÀåÀ¸·Î °¡´Â Áß...";
-        }
-    }
-
-    public void SendChattingMessage(string s) // Ã¤ÆÃ º¸³»±â
+    public void SendChattingMessage(string s) // ì±„íŒ… ë³´ë‚´ê¸°
     {
         playManager.chatText.text = s;
         StartCoroutine(ShowMyChatImageAnim());
         PhotonChatManager.Instance.SendChat(s);
     }
 
-    public void ShowChatImage(string name) // Ã¤ÆÃ ÀÌ¹ÌÁö º¸ÀÌ±â
+    public void ShowChatImage(string name) // ì±„íŒ… ì´ë¯¸ì§€ ë³´ì´ê¸°
     {
         if(name != DatabaseManager.Instance.name)
         {
@@ -329,7 +276,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-    private void InitChatObj() // ¹æ¿¡¼­ ³ª°¥ ¶§ Ã¤ÆÃ ÅØ½ºÆ® ÃÊ±âÈ­ & ÀÌ¹ÌÁö ºñÈ°¼ºÈ­
+    private void InitChatObj() // ë°©ì—ì„œ ë‚˜ê°ˆ ë•Œ ì±„íŒ… í…ìŠ¤íŠ¸ ì´ˆê¸°í™” & ì´ë¯¸ì§€ ë¹„í™œì„±í™”
     {
         foreach(var cardObj in playManager.cardDictionary)
         {
@@ -346,19 +293,77 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.chatInputField.text = "";
     }
 
-    // Ä¿½ºÅÒ ·ë ÇÁ·ÎÆÛÆ¼ º¯°æ ½Ã È£Ãâ
+    public override void OnMasterClientSwitched(Player newMasterClient) // ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ê°€ ë³€ê²½ë˜ì—ˆë‹¤ë©´
+    {
+        if (newMasterClient == PhotonNetwork.LocalPlayer) // ë°©ì¥ì´ë¼ë©´ ê²Œì„ì‹œì‘ & ì„¤ì •ì°½ ë³´ì´ê²Œ
+        {
+            //settingButtonObj.SetActive(true);
+            PhotonManager.Instance.playerProperties["ready"] = true;
+            PhotonManager.Instance.SetCustomProperty();
+            readyOrStartTMP.text = "ê²Œì„ ì‹œì‘";
+
+            playManager.stateText.color = masterColor;
+            playManager.stateText.text = "íšŒì˜ ìœ„ì›ì¥";
+            playManager.readyButton.interactable = false;
+        }
+        else
+        {
+            //settingButtonObj.SetActive(false);
+            PhotonManager.Instance.playerProperties["ready"] = false;
+            PhotonManager.Instance.SetCustomProperty();
+            readyOrStartTMP.text = "ê²Œì„ ì¤€ë¹„";
+
+            playManager.stateText.color = nonReadyColor;
+            playManager.stateText.text = "íšŒì˜ì¥ìœ¼ë¡œ ê°€ëŠ” ì¤‘...";
+        }
+    }
+
+    // í”Œë ˆì´ì–´ ì»¤ìŠ¤í…€ í”„ë¡œí¼í‹°ê°€ ë³€ê²½ëë‹¤ë©´ í˜¸ì¶œë˜ëŠ” ì½œë°±í•¨ìˆ˜ ####################
+    public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
+    {
+        if (changedProps.ContainsKey("ready") && 
+            !(bool)PhotonNetwork.CurrentRoom.CustomProperties["ing"]) // ë ˆë”” ìƒíƒœê°€ ë³€í–ˆë‹¤ë©´ stateë¥¼ ë°”ê¿”ì£¼ê¸°
+        {
+            UpdateOtherInfo();
+            CheckAllReady();
+        }
+
+        if (changedProps.ContainsKey("position")) // ì—­í• ì´ ì •í•´ì¡Œë‹¤ë©´ í¬ì§€ì…˜ ì¹´ë“œ ìŠ¤í”„ë¼ì´íŠ¸ ë³€ê²½
+        {
+            maxPlayer++;
+            playManager.SetPositionCard(targetPlayer);
+        }
+
+        // í•´ë‹¹ ì¡°ê±´ë¬¸ì€ ê²Œì„ ì‹œì‘ í›„ ì—­í•  ì„ ì • í›„ ìµœì´ˆì´ì ë§ˆì§€ë§‰ìœ¼ë¡œ í˜¸ì¶œë©ë‹ˆë‹¤.
+        if (maxPlayer == PhotonNetwork.CurrentRoom.MaxPlayers) // ëª¨ë“  í”Œë ˆì´ì–´ì˜ í¬ì§€ì…˜ì´ ì •í•´ì¡Œë‹¤ë©´
+        {
+            maxPlayer = 0;
+
+            // ì²« ë²ˆì§¸ ëŒ€í†µë ¹ ì§€ì •
+            PhotonManager.Instance.roomProperties["president"] = PhotonNetwork.CurrentRoom.Players[playManager.playerOrder[0]];
+            PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
+
+            // í˜„ì¬ ìˆœì„œ ì €ì¥ (currentOrder ì €ì¥)
+            PhotonManager.Instance.roomProperties["currentOrder"] = 0;
+            PhotonNetwork.CurrentRoom.SetCustomProperties(PhotonManager.Instance.roomProperties);
+
+            playManager.ShowPositionRPC(); // ì—­í•  ë³´ì—¬ì£¼ê¸°
+        }
+    }
+
+    // ì»¤ìŠ¤í…€ ë£¸ í”„ë¡œí¼í‹° ë³€ê²½ ì‹œ í˜¸ì¶œ #####################################
     public override void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
     {
         PhotonHashtable hashTable = PhotonNetwork.CurrentRoom.CustomProperties;
 
-        // ·¹µğ »óÅÂ ¿©ºÎ¿¡ µû¸¥ Á¦¸ñ, ·¹µğ ¹öÆ°, ³ª°¡±â ¹öÆ° È°¼ºÈ­ ¼³Á¤
-        if ((bool)hashTable["ing"]) // ÇöÀç °ÔÀÓ ÁßÀÌ¶ó¸é
+        // ë ˆë”” ìƒíƒœ ì—¬ë¶€ì— ë”°ë¥¸ ì œëª©, ë ˆë”” ë²„íŠ¼, ë‚˜ê°€ê¸° ë²„íŠ¼ í™œì„±í™” ì„¤ì •
+        if ((bool)hashTable["ing"]) // í˜„ì¬ ê²Œì„ ì¤‘ì´ë¼ë©´
         {
             playManager.roomNameText.text = "";
             playManager.readyButton.gameObject.SetActive(false);
             playManager.outButton.gameObject.SetActive(false);
         }
-        else if(!(bool)hashTable["ing"]) // ÇöÀç °ÔÀÓ ÁßÀÌ ¾Æ´Ï¶ó¸é
+        else if(!(bool)hashTable["ing"]) // í˜„ì¬ ê²Œì„ ì¤‘ì´ ì•„ë‹ˆë¼ë©´
         {
             playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name;
             playManager.readyButton.gameObject.SetActive(true);

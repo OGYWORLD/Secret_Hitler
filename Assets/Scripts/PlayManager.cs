@@ -1,4 +1,4 @@
-using Photon.Pun;
+ï»¿using Photon.Pun;
 using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,7 +14,7 @@ public enum Position
     hitler
 }
 
-public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç °Ô ¸¹¾Æ¼­ ³»¸²
+public class PlayManager : MonoBehaviourPunCallbacks // ì‹±ê¸€í†¤ìœ¼ë¡œ ì˜¬ë¦´ë ¤ë‹¤ê°€ ë“  ê²Œ ë§ì•„ì„œ ë‚´ë¦¼
 { 
     public PhotonView view;
 
@@ -40,26 +40,31 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
 
     public Image fadeImage;
 
-    public Sprite[] posCardImg; // ½ÅºĞ Ä«µå (0: hitler, 1~2: pacist, 3~9: liberal)
+    public Sprite[] posCardImg; // ì‹ ë¶„ ì¹´ë“œ (0: hitler, 1~2: pacist, 3~9: liberal)
 
-    public GameObject posInfoTextObj; // ´ç½ÅÀÇ ½ÅºĞÀº?
-    public GameObject[] posObj; // ½ÅºĞ Á¤º¸ ¿ÀºêÁ§Æ® (0: ¸®¹ö·², 1: ÆÄ½Ã½ºÆ®, 2: È÷Æ²·¯)
-    public Text[] pacistListTexts; // ¿ªÇÒ °ø°³ Àå¸é ÆÄ½Ã½ºÆ® ¸®½ºÆ®
+    public GameObject posInfoTextObj; // ë‹¹ì‹ ì˜ ì‹ ë¶„ì€?
+    public GameObject[] posObj; // ì‹ ë¶„ ì •ë³´ ì˜¤ë¸Œì íŠ¸ (0: ë¦¬ë²„ëŸ´, 1: íŒŒì‹œìŠ¤íŠ¸, 2: íˆí‹€ëŸ¬)
+    public Text[] pacistListTexts; // ì—­í•  ê³µê°œ ì¥ë©´ íŒŒì‹œìŠ¤íŠ¸ ë¦¬ìŠ¤íŠ¸ (íŒŒì‹œìŠ¤íŠ¸)
+    public Text[] pacistHitlerListTexts; // ì—­í•  ê³µê°œ ì¥ë©´ íŒŒì‹œìŠ¤íŠ¸ ë¦¬ìŠ¤íŠ¸ (íˆí‹€ëŸ¬)
+    public GameObject hitler56obj; // 5-6ì¸ ì‹œ, íˆí‹€ëŸ¬ê°€ ê°€ì§€ëŠ” íŒŒì‹œìŠ¤íŠ¸ ë¦¬ìŠ¤íŠ¸ ì˜¤ë¸Œì íŠ¸
 
-    public GameObject[] pacistBoads; // ÆÄ½Ã½ºÆ® º¸µåÆÇ 0: 5~6, 1: 7~8, 2: 9~10
+    public GameObject[] pacistBoads; // íŒŒì‹œìŠ¤íŠ¸ ë³´ë“œíŒ 0: 5~6, 1: 7~8, 2: 9~10
 
-    public GameObject infoPanel; // ³»°¢ ±¸¼º, Âù¹İ ÅõÇ¥ µî ÇöÀç »óÈ²À» ¾Ë·ÁÁÖ´Â ÆÇ³Ú
+    public GameObject infoPanel; // ë‚´ê° êµ¬ì„±, ì°¬ë°˜ íˆ¬í‘œ ë“± í˜„ì¬ ìƒí™©ì„ ì•Œë ¤ì£¼ëŠ” íŒë„¬
 
-    public int[] playerOrder; // ÇÃ·¹ÀÌ¾î ¼ø¼­ - Actor Number·Î ÀúÀå
-
-    public int currentOrder; // ÇöÀç ´©°¡ ´ëÅë·ÉÀÎÁö - playerOrderÀÇ ÀÎµ¦½º·Î ±â·Ï
+    public int[] playerOrder; // í”Œë ˆì´ì–´ ìˆœì„œ - Actor Numberë¡œ ì €ì¥
 
     private int totalPolicyNum = 17;
-    public int[] policyArray = new int[17]; // Á¤Ã¥ ¹è¿­ (0: liberal, 1: pacist) liberal 6Àå, pacist 11Àå
+    public int[] policyArray; // ì •ì±… ë°°ì—´ (0: liberal, 1: pacist) liberal 6ì¥, pacist 11ì¥
+
+    private void Start()
+    {
+        policyArray = new int[17];
+    }
 
     public void InitWhenJoinedRoom()
     {
-        // º¸µåÆÇ ÀÎ¿ø¼ö¿¡ ¸Â°Ô µîÀå
+        // ë³´ë“œíŒ ì¸ì›ìˆ˜ì— ë§ê²Œ ë“±ì¥
         foreach(GameObject board in pacistBoads)
         {
             board.SetActive(false);
@@ -80,7 +85,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
             pacistBoads[2].SetActive(true);
         }
 
-        // ÆäÀÌµåÀÎ¾Æ¿ô ¿ë ÀÌ¹ÌÁö ¾ËÆÄ°ª 0À¸·Î ÃÊ±âÈ­
+        // í˜ì´ë“œì¸ì•„ì›ƒ ìš© ì´ë¯¸ì§€ ì•ŒíŒŒê°’ 0ìœ¼ë¡œ ì´ˆê¸°í™”
         Color color = fadeImage.color;
         color.a = 0;
         fadeImage.color = color;
@@ -90,31 +95,37 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
             t.text = "";
         }
 
-        // ¹öÆ°µé È°¼ºÈ­
+        foreach (Text t in pacistHitlerListTexts)
+        {
+            t.text = "";
+        }
+
+        // ë²„íŠ¼ë“¤ í™œì„±í™”
         readyButton.gameObject.SetActive(true);
         outButton.gameObject.SetActive(true);
 
-        // ÀÚ½ÅÀÇ ½ÅºĞ Ä«µå ºñÈ°¼ºÈ­
+        // ìì‹ ì˜ ì‹ ë¶„ ì¹´ë“œ ë¹„í™œì„±í™”
         myPosObj.gameObject.SetActive(false);
 
-        // ´Ù¸¥ »ç¶÷ÀÇ ½ÅºĞ Ä«µå ºñÈ°¼ºÈ­
+        // ë‹¤ë¥¸ ì‚¬ëŒì˜ ì‹ ë¶„ ì¹´ë“œ ë¹„í™œì„±í™”
         foreach(GameObject obj in cardDictionary.Values)
         {
             obj.transform.GetChild(3).gameObject.SetActive(false);
         }
 
-        // info panel ºñÈ°¼ºÈ­
+        // info panel ë¹„í™œì„±í™”
         infoPanel.SetActive(false);
     }
 
-    public int[] SufflePolicy() // Á¤Ã¥ ¹è¿­ ¼¯±â
+    public int[] SufflePolicy() // ì •ì±… ë°°ì—´ ì„ê¸°
     {
         int liberalCnt = 6;
         int pacistCnt = 11;
 
         for(int i = 0; i < totalPolicyNum;)
         {
-            int policy = UnityEngine.Random.Range(0, 2); // ·£´ıÇÏ°Ô Á¤Ã¥ »Ì±â (0: liberal, 1: pacist)
+            int policy = UnityEngine.Random.Range(0, 2); // ëœë¤í•˜ê²Œ ì •ì±… ë½‘ê¸° (0: liberal, 1: pacist)
+            
             if(policy == 0 && liberalCnt > 0)
             {
                 policyArray[i] = policy;
@@ -145,7 +156,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
         policyArray = p;
     }
 
-    public int[] SetPlayerOrder() // ÇÃ·¹ÀÌ ¼ø¼­ Á¤ÇÏ±â
+    public int[] SetPlayerOrder() // í”Œë ˆì´ ìˆœì„œ ì •í•˜ê¸°
     {
         int index = 0;
         playerOrder = new int[PhotonNetwork.CurrentRoom.MaxPlayers];
@@ -170,23 +181,23 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
         playerOrder = p;
     }
 
-    public void PickPosition() // ¿ªÇÒ »Ì±â
+    public void PickPosition() // ì—­í•  ë½‘ê¸°
     {
         totalPosition = new int[PhotonNetwork.CurrentRoom.MaxPlayers];
-        for(int i = 0; i < PhotonNetwork.CurrentRoom.MaxPlayers; i++) // ¿ªÇÒ ¹æ¹® ¹è¿­ ÃÊ±âÈ­
+        for(int i = 0; i < PhotonNetwork.CurrentRoom.MaxPlayers; i++) // ì—­í•  ë°©ë¬¸ ë°°ì—´ ì´ˆê¸°í™”
         {
             isSelected.Add(false);
             totalPosition[i] = (int)Position.liberal;
         }
 
-        if (!PhotonNetwork.IsMasterClient) return; // ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®(¹æÀå)°¡ »ÌÀ½
+        if (!PhotonNetwork.IsMasterClient) return; // ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸(ë°©ì¥)ê°€ ë½‘ìŒ
 
         int liberalCnt = PhotonManager.Instance.cntDictionary[PhotonNetwork.CurrentRoom.MaxPlayers].Item1;
         int pacistCnt = PhotonManager.Instance.cntDictionary[PhotonNetwork.CurrentRoom.MaxPlayers].Item2;
 
         int totalCnt = liberalCnt + pacistCnt;
 
-        for (int i = 0; i < totalCnt;) // List¿¡ ¿ªÇÒÀ» ·£´ıÇÏ°Ô ³ÖÀ½
+        for (int i = 0; i < totalCnt;) // Listì— ì—­í• ì„ ëœë¤í•˜ê²Œ ë„£ìŒ
         {
             int random = UnityEngine.Random.Range(0, totalCnt);
  
@@ -220,14 +231,16 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
         }
     }
 
-    // TODO: °ÔÀÓ Á¾·á ÈÄ ·¹µğ ¹Ì¿Ï·á ¹®±¸µµ ³Ö¾î¾ßÇÔ
+    // TODO: ê²Œì„ ì¢…ë£Œ í›„ ë ˆë”” ë¯¸ì™„ë£Œ ë¬¸êµ¬ë„ ë„£ì–´ì•¼í•¨
     [PunRPC]
-    public void StateInitForGameStart() // °ÔÀÓ ½ÃÀÛ ÈÄ ·¹µğ »óÅÂ ¹®±¸ Áö¿ì±â
+    public void StateInitForGameStart() // ê²Œì„ ì‹œì‘ í›„ ë ˆë”” ìƒíƒœ ë¬¸êµ¬ ì§€ìš°ê¸°
     {
-        foreach (GameObject obj in cardDictionary.Values)
+        stateText.text = "";
+
+        foreach (var obj in cardDictionary)
         {
-            Text stateText = obj.GetComponentsInChildren<Text>()[1];
-            stateText.text = "";
+            Text state = obj.Value.GetComponentsInChildren<Text>()[1];
+            state.text = "";
         }
     }
 
@@ -236,12 +249,12 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
         view.RPC("StateInitForGameStart", RpcTarget.All);
     }
 
-    public void SendPickPosition() // Æ÷Áö¼Ç »Ì±â
+    public void SetPlayerCustomForPosition() // í¬ì§€ì…˜ ë½‘ê¸°
     {
         int index = 0;
         foreach (var player in PhotonNetwork.CurrentRoom.Players.Values)
         {
-            // ÇÃ·¹ÀÌ¾î Ä¿½ºÅÒ ÇÁ·ÎÆÛÆ¼(Æ÷Áö¼Ç - ¸®¹ö·², ÆÄ½Ã½ºÆ®, È÷Æ²·¯) ÁöÁ¤
+            // í”Œë ˆì´ì–´ ì»¤ìŠ¤í…€ í”„ë¡œí¼í‹°(í¬ì§€ì…˜ - ë¦¬ë²„ëŸ´, íŒŒì‹œìŠ¤íŠ¸, íˆí‹€ëŸ¬) ì§€ì •
             PhotonManager.Instance.playerProperties["position"] = (Position)totalPosition[index];
             player.SetCustomProperties(PhotonManager.Instance.playerProperties);
 
@@ -249,66 +262,80 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
         }
     }
 
-    public void ShowPickChancellorInfo(Action pickChancellor) // ¼ö»ó »ÌÀ¸¶ó°í ¾È³»
+    public void ShowPickChancellorInfo(Action pickChancellor) // ìˆ˜ìƒ ë½‘ìœ¼ë¼ê³  ì•ˆë‚´
     {
-        // 0: ³»°¢±¸¼º, 1: ´ëÅë·É, 2: ´ëÅë·ÉÀÌ¸§, 3: ´ÙÀ½ ´ëÅë·É, 4: ´ëÅë·ÉÀº ¼ö»óÀ» ¼±Á¤~
+        // 0: ë‚´ê°êµ¬ì„±, 1: ëŒ€í†µë ¹, 2: ëŒ€í†µë ¹ì´ë¦„, 3: ë‹¤ìŒ ëŒ€í†µë ¹, 4: ëŒ€í†µë ¹ì€ ìˆ˜ìƒì„ ì„ ì •~
         Text[] texts = infoPanel.GetComponentsInChildren<Text>();
 
-        texts[0].text = "³»°¢ ±¸¼º"; 
-        texts[1].text = "´ëÅë·É"; 
-        texts[2].text = PhotonNetwork.CurrentRoom.Players[playerOrder[currentOrder]].NickName; // TODO: currentOrder Áõ°¡ÇÒ ¶§ 0À¸·Î ÃÊ±âÈ­
-        texts[3].text = $"´ÙÀ½ ´ëÅë·ÉÀº {PhotonNetwork.CurrentRoom.Players[playerOrder[currentOrder+1]].NickName} ÀÔ´Ï´Ù."; 
-        texts[4].text = "´ëÅë·ÉÀº ¼ö»óÀ» ¼±Á¤ÇÏ½Ê½Ã¿À.";
+        texts[0].text = "ë‚´ê° êµ¬ì„±"; 
+        texts[1].text = "ëŒ€í†µë ¹"; 
+        texts[2].text = PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonManager.Instance.roomProperties["currentOrder"]]].NickName; // TODO: currentOrder ì¦ê°€í•  ë•Œ 0ìœ¼ë¡œ ì´ˆê¸°í™”
+        texts[3].text = $"ë‹¤ìŒ ëŒ€í†µë ¹ì€ {PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonManager.Instance.roomProperties["currentOrder"]+ 1]].NickName} ì…ë‹ˆë‹¤."; 
+        texts[4].text = "ëŒ€í†µë ¹ì€ ìˆ˜ìƒì„ ì„ ì •í•˜ì‹­ì‹œì˜¤.";
 
         infoPanel.SetActive(true);
 
-        // ¼ö»ó »Ì±â ÇÔ¼ö È£Ãâ
+        // ìˆ˜ìƒ ë½‘ê¸° í•¨ìˆ˜ í˜¸ì¶œ
         pickChancellor?.Invoke();
     }
 
-    public void PickChanellorInfo() // ¼ö»ó »Ì±â
+    public void PickChanellorInfo() // ìˆ˜ìƒ ë½‘ê¸°
     {
-        // ´ëÅë·ÉÀÌ¶ó¸é ¼ö»ó ¼±ÅÃ
+        // ëŒ€í†µë ¹ì´ë¼ë©´ ìˆ˜ìƒ ì„ íƒ
         if((Player)PhotonNetwork.CurrentRoom.CustomProperties["president"] == PhotonNetwork.LocalPlayer)
         {
-            roomNameText.text = "¼ö»óÀ» ¼±ÅÃÇØÁÖ½Ê½Ã¿À.";
+            roomNameText.text = "ìˆ˜ìƒì„ ì„ íƒí•´ì£¼ì‹­ì‹œì˜¤.";
         }
-        else // ¾Æ´Ï¶ó¸é ´ë±â
+        else // ì•„ë‹ˆë¼ë©´ ëŒ€ê¸°
         {
-            roomNameText.text = $"{PhotonNetwork.CurrentRoom.Players[playerOrder[currentOrder]].NickName}°¡ ¼ö»óÀ» ¼±Á¤ ÁßÀÔ´Ï´Ù.";
+            roomNameText.text = $"{PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonManager.Instance.roomProperties["currentOrder"]]].NickName}ì´(ê°€) ìˆ˜ìƒì„ ì„ ì • ì¤‘ì…ë‹ˆë‹¤.";
         }
     }
 
     public void SetPositionCard(Player player)
     {
-        // ÇÃ·¹ÀÌ¾î UI¿¡ º¸ÀÌ´Â ¿ªÇÒ Ä«µå ½ºÇÁ¶óÀÌÆ® ±³Ã¼
+        // í”Œë ˆì´ì–´ UIì— ë³´ì´ëŠ” ì—­í•  ì¹´ë“œ ìŠ¤í”„ë¼ì´íŠ¸ êµì²´
         int spriteIdx = 0;
 
         if ((Position)player.CustomProperties["position"] == Position.liberal)
         {
             spriteIdx = UnityEngine.Random.Range(3, 10);
+
+            if(player == PhotonNetwork.LocalPlayer)
+            {
+                myPosObj.gameObject.GetComponent<Image>().sprite = posCardImg[spriteIdx];
+                posObj[0].GetComponentInChildren<Image>().sprite = posCardImg[spriteIdx];
+            }
         }
         else if ((Position)player.CustomProperties["position"] == Position.pacist)
         {
             spriteIdx = UnityEngine.Random.Range(1, 3);
+
+            if (player == PhotonNetwork.LocalPlayer)
+            {
+                myPosObj.gameObject.GetComponent<Image>().sprite = posCardImg[spriteIdx];
+                posObj[1].GetComponentInChildren<Image>().sprite = posCardImg[spriteIdx];
+            }
         }
         else
         {
             spriteIdx = 0;
+
+            if (player == PhotonNetwork.LocalPlayer)
+            {
+                myPosObj.gameObject.GetComponent<Image>().sprite = posCardImg[spriteIdx];
+                posObj[2].GetComponentInChildren<Image>().sprite = posCardImg[spriteIdx];
+            }
         }
 
-        if (player == PhotonNetwork.LocalPlayer)
-        {
-            myPosObj.gameObject.GetComponent<Image>().sprite = posCardImg[spriteIdx];
-        }
-        else
+        if(player != PhotonNetwork.LocalPlayer)
         {
             cardDictionary[player.NickName].transform.GetChild(3).gameObject.GetComponent<Image>().sprite
             = posCardImg[spriteIdx];
         }
     }
 
-    public void ShowPositionRPC() // °ÔÀÓ ½ÃÀÛ ÈÄ ½ÅºĞ º¸¿©ÁÖ±â
+    public void ShowPositionRPC() // ê²Œì„ ì‹œì‘ í›„ ì‹ ë¶„ ë³´ì—¬ì£¼ê¸°
     {
         view.RPC("ShowPosition", RpcTarget.All);
     }
@@ -319,7 +346,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
         StartCoroutine(GameStartIntro());
     }
 
-    public void KickAllPlayerRPC() // ´©±¸ ÇÑ ¸í ³ª°¡¸é ¹æ ¾ø¾Ö±â
+    public void KickAllPlayerRPC() // ëˆ„êµ¬ í•œ ëª… ë‚˜ê°€ë©´ ë°© ì—†ì• ê¸°
     {
         view.RPC("KickOut", RpcTarget.All);
     }
@@ -335,7 +362,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
 
     }
 
-    private IEnumerator GameStartIntro() // °ÔÀÓ ½ÃÀÛ ÈÄ ½ÅºĞ ÀÎÆ®·Î
+    private IEnumerator GameStartIntro() // ê²Œì„ ì‹œì‘ í›„ ì‹ ë¶„ ì¸íŠ¸ë¡œ
     {
         float sumTime = 0f;
         float fadeTime = 2f;
@@ -355,31 +382,55 @@ public class PlayManager : MonoBehaviourPunCallbacks // ½Ì±ÛÅæÀ¸·Î ¿Ã¸±·Á´Ù°¡ µç
         color.a = 1;
         fadeImage.color = color;
 
-        // ½ÅºĞ °ø°³ ¿ÀºêÁ§Æ® È°¼ºÈ­
+        // ì‹ ë¶„ ê³µê°œ ì˜¤ë¸Œì íŠ¸ í™œì„±í™”
         posInfoTextObj.SetActive(true);
         posObj[(int)PhotonNetwork.LocalPlayer.CustomProperties["position"]].SetActive(true);
 
-        // ÀÚ½ÅÀÇ ½ÅºĞ Ä«µå È°¼ºÈ­
-        // TODO: °ÔÀÓ Á¾·á ÈÄ ´Ù½Ã ºñÈ°¼ºÈ­ ÇØ¾ßµÊ
+        // ìì‹ ì˜ ì‹ ë¶„ ì¹´ë“œ í™œì„±í™”
         myPosObj.gameObject.SetActive(true);
 
-        if ((Position)PhotonNetwork.LocalPlayer.CustomProperties["position"] == Position.pacist) // ÆÄ½Ã½ºÆ®ÀÏ °æ¿ì
+        int index = 0;
+        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values) // ì‹ ë¶„ ê³µê°œ ë•Œ íŒŒì‹œìŠ¤íŠ¸ ë¦¬ìŠ¤íŠ¸ ì¶œë ¥
         {
-            int index = 0;
-            foreach(Player player in PhotonNetwork.CurrentRoom.Players.Values) // ½ÅºĞ °ø°³ ¶§ ÆÄ½Ã½ºÆ® ¸®½ºÆ® Ãâ·Â
+            if (PhotonNetwork.CurrentRoom.MaxPlayers <= 6 && player != PhotonNetwork.LocalPlayer)
             {
-                if(player != PhotonNetwork.LocalPlayer && (Position)player.CustomProperties["position"] == Position.pacist)
+                hitler56obj.SetActive(true);
+                if ((Position)player.CustomProperties["position"] == Position.pacist || (Position)player.CustomProperties["position"] == Position.hitler)
                 {
-                    pacistListTexts[index].text = player.NickName;
+                    if((Position)PhotonNetwork.LocalPlayer.CustomProperties["position"] == Position.pacist)
+                    {
+                        pacistListTexts[index].text = $"{player.NickName}";
 
-                    // ÆÄ½Ã½ºÆ®µéÀÇ ½ÅºĞÄ«µå È°¼ºÈ­
-                    // TODO: °ÔÀÓ Á¾·á ÈÄ ´Ù½Ã ºñÈ°¼ºÈ­ ÇØ¾ßµÊ
-                    cardDictionary[player.NickName].transform.GetChild(3).gameObject.SetActive(true);
+                        // íŒŒì‹œìŠ¤íŠ¸ë“¤ì˜ ì‹ ë¶„ì¹´ë“œ í™œì„±í™”
+                        cardDictionary[player.NickName].transform.GetChild(3).gameObject.SetActive(true);
+                        index++;
+                    }
+                    else if((Position)PhotonNetwork.LocalPlayer.CustomProperties["position"] == Position.hitler)
+                    {
+                        pacistHitlerListTexts[index].text = $"{player.NickName}";
 
-                    index++;
+                        // íŒŒì‹œìŠ¤íŠ¸ë“¤ì˜ ì‹ ë¶„ì¹´ë“œ í™œì„±í™”
+                        cardDictionary[player.NickName].transform.GetChild(3).gameObject.SetActive(true);
+                        index++;
+                    }
                 }
             }
-        
+            else if(PhotonNetwork.CurrentRoom.MaxPlayers > 6 && player != PhotonNetwork.LocalPlayer)
+            {
+                hitler56obj.SetActive(false);
+                if ((Position)PhotonNetwork.LocalPlayer.CustomProperties["position"] == Position.pacist)
+                {
+                    if ((Position)player.CustomProperties["position"] == Position.pacist)
+                    {
+                        pacistListTexts[index].text = $"{player.NickName}";
+
+                        // íŒŒì‹œìŠ¤íŠ¸ë“¤ì˜ ì‹ ë¶„ì¹´ë“œ í™œì„±í™”
+                        cardDictionary[player.NickName].transform.GetChild(3).gameObject.SetActive(true);
+
+                        index++;
+                    }
+                }
+            }
         }
 
         yield return new WaitForSeconds(3f);
