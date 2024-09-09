@@ -16,9 +16,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     public List<RoomInfo> roomList { get; set; } = new List<RoomInfo>();
 
-    public PhotonHashtable playerProperties { get; set; } = new PhotonHashtable();
-    public PhotonHashtable roomProperties { get; set; } = new PhotonHashtable();
-
     private void Awake()
     {
         if (Instance == null)
@@ -38,10 +35,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         cntDictionary[8] = (5, 3);
         cntDictionary[9] = (5, 4);
         cntDictionary[10] = (6, 4);
-
-        // 커스텀 플레이어 프로퍼티 속성 설정 (레디 상태)
-        playerProperties["ready"] = false;
-        PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
     }
 
     public void TryConnect()
@@ -106,10 +99,5 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public int GetMaxPlayer()
     {
         return PhotonNetwork.CurrentRoom.MaxPlayers;
-    }
-
-    public void SetCustomProperty()
-    {
-        PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
     }
 }

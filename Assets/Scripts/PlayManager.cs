@@ -6,6 +6,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using System.Text;
+
+using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 
 public enum Position
 {
@@ -54,12 +57,40 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public int[] playerOrder; // 플레이어 순서 - Actor Number로 저장
 
+    public Dictionary<string, int> nameActorDictionary = new Dictionary<string, int>(); // <플레이어, 액터넘버>
+
     private int totalPolicyNum = 17;
     public int[] policyArray; // 정책 배열 (0: liberal, 1: pacist) liberal 6장, pacist 11장
 
-    private void Start()
+    public GameObject chanPanel; // 수상 선택 패널
+    public ToggleGroup chanToggleGroup; // 수상 선택 토글 그룹
+    public Toggle[] chanToggles; // 수상 선택 토글 배열
+
+    private int minPlayer = 5; // 게임 최소 인원수
+
+    public Button chanPickBtn; // 수상 선정 버튼
+
+    public GameObject pollPanel; // 투표 패널
+    public Button[] pollCardsBtn; // 투표 카드 (0: ja, 1: nein)
+    public Button pollFinBtn; // 투표 완료 버튼
+    public GameObject pollWaringTextObj; // 투표 미완료 경고 오브젝트
+
+    private int myJaNein = -1; // 찬반 투표 선택값 (-1: 아직 하지 않음, 0: ja, 1: nein) 
+
+    private Hashtable pollResultHash = new Hashtable();
+
+    public GameObject pollResultPanel; // 투표 결과 패널
+    public Text[] jaPollResultTexts; // 투표 결과 중 찬성 배열
+    public Text[] neinPollResultTexts; // 투표 결과 중 반대 배열
+
+    private void Awake()
     {
         policyArray = new int[17];
+
+        chanPickBtn.onClick.AddListener(SetChancellorAndSendPickEnd);
+        pollCardsBtn[0].onClick.AddListener(() => { myJaNein = 0; pollWaringTextObj.SetActive(false); });
+        pollCardsBtn[1].onClick.AddListener(() => { myJaNein = 1; pollWaringTextObj.SetActive(false); });
+        pollFinBtn.onClick.AddListener(FinPoll);
     }
 
     public void InitWhenJoinedRoom()
@@ -115,6 +146,19 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         // info panel 비활성화
         infoPanel.SetActive(false);
+
+        // 플레이어 커스텀 프로퍼티 초기화
+        PhotonHashtable playerProperties = new PhotonHashtable();
+        playerProperties["beforeChan"] = false; // 이전 수상 초기화
+        playerProperties["beforePre"] = false; // 이전 대통령 초기화
+        playerProperties["ready"] = false; // 커스텀 플레이어 프로퍼티 속성 설정 (레디 상태)
+
+        if(PhotonNetwork.IsMasterClient)
+        {
+            playerProperties["ready"] = true; // 마스터 플레이어라면 레디를 true로
+        }
+
+        PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
     }
 
     public int[] SufflePolicy() // 정책 배열 섞기
@@ -163,6 +207,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         foreach (KeyValuePair<int, Player> player in PhotonNetwork.CurrentRoom.Players)
         {
             playerOrder[index] = player.Value.ActorNumber;
+            nameActorDictionary[player.Value.NickName] = player.Value.ActorNumber; // 플레이어 이름에 따른 액터넘버
 
             index++;
         }
@@ -255,8 +300,10 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         foreach (var player in PhotonNetwork.CurrentRoom.Players.Values)
         {
             // 플레이어 커스텀 프로퍼티(포지션 - 리버럴, 파시스트, 히틀러) 지정
-            PhotonManager.Instance.playerProperties["position"] = (Position)totalPosition[index];
-            player.SetCustomProperties(PhotonManager.Instance.playerProperties);
+            PhotonHashtable existPlayerProperties = player.CustomProperties;
+
+            existPlayerProperties["position"] = (Position)totalPosition[index];
+            player.SetCustomProperties(existPlayerProperties);
 
             index++;
         }
@@ -267,30 +314,251 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         // 0: 내각구성, 1: 대통령, 2: 대통령이름, 3: 다음 대통령, 4: 대통령은 수상을 선정~
         Text[] texts = infoPanel.GetComponentsInChildren<Text>();
 
-        texts[0].text = "내각 구성"; 
+        texts[0].text = "내각 구성을 시작합니다"; 
         texts[1].text = "대통령"; 
-        texts[2].text = PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonManager.Instance.roomProperties["currentOrder"]]].NickName; // TODO: currentOrder 증가할 때 0으로 초기화
-        texts[3].text = $"다음 대통령은 {PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonManager.Instance.roomProperties["currentOrder"]+ 1]].NickName} 입니다."; 
+        texts[2].text = PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonNetwork.CurrentRoom.CustomProperties["currentOrder"]]].NickName; // TODO: currentOrder 증가할 때 0으로 초기화
+        texts[3].text = $"다음 대통령은 {PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonNetwork.CurrentRoom.CustomProperties["currentOrder"] + 1]].NickName} 입니다."; 
         texts[4].text = "대통령은 수상을 선정하십시오.";
 
         infoPanel.SetActive(true);
 
-        // 수상 뽑기 함수 호출
-        pickChancellor?.Invoke();
+        // 애니메이션 올라갈 때까지 대기 후 수상 뽑기 호출
+        StartCoroutine(WaitPanelSeconds(4f, pickChancellor));
     }
 
     public void PickChanellorInfo() // 수상 뽑기
     {
+        infoPanel.SetActive(false);
+
         // 대통령이라면 수상 선택
         if((Player)PhotonNetwork.CurrentRoom.CustomProperties["president"] == PhotonNetwork.LocalPlayer)
         {
             roomNameText.text = "수상을 선택해주십시오.";
+
+            ShowChanCandidate();
         }
         else // 아니라면 대기
         {
-            roomNameText.text = $"{PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonManager.Instance.roomProperties["currentOrder"]]].NickName}이(가) 수상을 선정 중입니다.";
+            roomNameText.text = $"{PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonNetwork.CurrentRoom.CustomProperties["currentOrder"]]].NickName}이(가) 수상을 선정 중입니다.";
         }
     }
+
+    public void ShowChanCandidate() // 토글 그룹에 수상 후보 목록 출력
+    {
+        ToggleListInit();
+
+        int index = 0;
+        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
+        {
+            if(player != PhotonNetwork.LocalPlayer)
+            {
+                // 현재 생존 인원이 6명 이상일 경우
+                if ((int)PhotonNetwork.CurrentRoom.CustomProperties["liveCnt"] > minPlayer)
+                {
+                    if (!(bool)player.CustomProperties["beforePre"] && !(bool)player.CustomProperties["beforeChan"])
+                    {
+                        chanToggles[index].GetComponentInChildren<Text>().text = player.NickName;
+                        chanToggles[index].name = player.NickName;
+                        chanToggles[index].gameObject.SetActive(true);
+
+                        index++;
+                    }
+                }
+                else
+                {
+                    if (!(bool)player.CustomProperties["beforeChan"])
+                    {
+                        chanToggles[index].GetComponentInChildren<Text>().text = player.NickName;
+                        chanToggles[index].name = player.NickName;
+                        chanToggles[index].gameObject.SetActive(true);
+
+                        index++;
+                    }
+                }
+            }
+        }
+
+        chanPanel.SetActive(true);
+    }
+
+    public void SetChancellorAndSendPickEnd()
+    {
+        Toggle selectedToggle = null; // 수상으로 선정된 토글
+
+        // 누굴 선정했는지 가져오기
+        foreach(Toggle t in chanToggleGroup.ActiveToggles())
+        {
+            selectedToggle = t;
+            break;
+        }
+
+        PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+
+        // 수상이 누군지 선정 (내각 구성 무산 시 -1로 지정)
+        existRoomProperties["chancellor"] = PhotonNetwork.CurrentRoom.Players[nameActorDictionary[selectedToggle.GetComponentInChildren<Text>().text]];
+        PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
+        // 뽑기 완료 -> 투표하기 진행
+        ShowPollInfoRPC();
+    }
+
+    private void ToggleListInit() // 수상 후보 토글 목록 비활성화
+    {
+        foreach (Toggle toggle in chanToggles)
+        {
+            toggle.gameObject.SetActive(false);
+        }
+    }
+
+    [PunRPC]
+    public void ShowPollInfo()
+    {
+        chanPanel.SetActive(false);
+
+        Player president = (Player)PhotonNetwork.CurrentRoom.CustomProperties["president"];
+        Player chancellor = (Player)PhotonNetwork.CurrentRoom.CustomProperties["chancellor"];
+
+        // 0: 내각구성 찬반 투표, 1: 대통령, 2: 대통령이름, 3: 다음 대통령, 4: 대통령은 수상을 선정~
+        Text[] texts = infoPanel.GetComponentsInChildren<Text>();
+        
+        texts[0].text = "내각 구성 찬반 투표를 시작합니다";
+        texts[1].text = "대통령, 수상";
+        texts[2].text = $"{president.NickName} {chancellor.NickName}";
+        texts[3].text = "과반수 동의 시, 내각이 구성됩니다.";
+        texts[4].text = "투표를 시작해주십시오.";
+
+        infoPanel.SetActive(true);
+
+        // 판넬 애니메이션 대기 후 찬반 투표 시작
+        StartCoroutine(WaitPanelSeconds(4f, Poll));
+    }
+
+    public void ShowPollInfoRPC()
+    {
+        view.RPC("ShowPollInfo", RpcTarget.All);
+    }
+
+    public void Poll() // 찬반 투표
+    {
+        if(PhotonNetwork.LocalPlayer == PhotonNetwork.CurrentRoom.CustomProperties["president"] ||
+            PhotonNetwork.LocalPlayer == PhotonNetwork.CurrentRoom.CustomProperties["chancellor"])
+        {
+            roomNameText.text = "의원들의 투표를 기다리는 중 입니다...";
+            return;
+        }
+
+        // 초기화
+        roomNameText.text = "투표를 진행해주십시오.";
+        myJaNein = -1;
+        pollResultHash.Clear();
+
+        infoPanel.SetActive(false);
+        pollPanel.SetActive(true);
+    }
+
+    public void FinPoll() // 투표 완료 버튼
+    {
+        if(myJaNein == -1) // 투표를 하지 않았다면 완료 되지 않음
+        {
+            pollWaringTextObj.SetActive(true);
+            return;
+        }
+
+        if(pollCardsBtn[0].IsInteractable()) // 투표 미완료 -> 완료
+        {
+            pollCardsBtn[0].interactable = false;
+            pollCardsBtn[1].interactable = false;
+
+            pollFinBtn.gameObject.GetComponentInChildren<Text>().text = "투표 변경";
+
+            view.RPC("SendPollResultToMaster", RpcTarget.MasterClient, 
+                PhotonNetwork.NickName, myJaNein); // 마스터 클라이언트에게 투표 결과 전송
+        }
+        else  // 투표 완료 -> 미완료
+        {
+            pollCardsBtn[0].interactable = true;
+            pollCardsBtn[1].interactable = true;
+
+            pollFinBtn.gameObject.GetComponentInChildren<Text>().text = "투표 완료";
+        }
+    }
+
+    [PunRPC]
+    public void SendPollResultToMaster(string name, int result) // 마스터 클라이언트가 투표 결과를 확인
+    {
+        pollResultHash[name] = result;
+
+        if(pollResultHash.Count == (PhotonNetwork.CurrentRoom.MaxPlayers - 2)) // 모든 사람이 투표를 완료 했다면
+        {
+            string resultS = ""; // 투표 결과를 문자열로 저장하여 전송
+            // "NickName 0 NickName 1 ..." (" "으로 구분)
+
+            int jaCnt = 0;
+            int neinCnt = 0;
+            foreach(DictionaryEntry d in pollResultHash)
+            {
+                resultS += $"{d.Key} {d.Value} ";
+
+                if ((int)d.Value == 0) jaCnt++;
+                if ((int)d.Value == 1) neinCnt++;
+            }
+
+            if(jaCnt > neinCnt) // 내각 구성 성공
+            {
+                view.RPC("ShowPollResult", RpcTarget.All, resultS, 0);
+            }
+            else // 내각 구성 실패
+            {
+                view.RPC("ShowPollResult", RpcTarget.All, resultS, 1);
+            }
+        }
+    }
+
+    [PunRPC]
+    public void ShowPollResult(string resultS, int result)
+    {
+        pollPanel.SetActive(false);
+        pollResultPanel.SetActive(true);
+        InitPollResultArray();
+
+        string[] results = resultS.Split(" "); // 결과 문자열을 split
+
+        int jaIdx = 0;
+        int neinIdx = 0;
+        for(int i = 0; i < results.Length-1; i+=2) // 결과 리스트 세팅
+        {
+            if(results[i + 1] == "0") // 찬성
+            {
+                jaPollResultTexts[jaIdx].text = results[i];
+                jaIdx++;
+            }
+            else // 반대
+            {
+                neinPollResultTexts[neinIdx].text = results[i];
+                neinIdx++;
+            }
+        }
+
+        if(result == 0) // 내각 구성에 성공했다면 투표 진행
+        {
+            // 파시즘 정책이 3개 이상 발의되었고 수상이 히틀러인지 확인
+            print("투표합니당~");
+        }
+        else // 내각 구성에 실패했다면 추적용 마커 1칸 전진
+        {
+            print("내각 구성 실패~");
+        }
+    }
+
+    public void InitPollResultArray()
+    {
+        for(int i = 0; i < jaPollResultTexts.Length; i++)
+        {
+            jaPollResultTexts[i].text = "";
+            neinPollResultTexts[i].text = "";
+        }
+    }
+
 
     public void SetPositionCard(Player player)
     {
@@ -355,11 +623,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public void KickOut()
     {
         PhotonNetwork.LeaveRoom();
-    }
-
-    public void PickChancellor()
-    {
-
     }
 
     private IEnumerator GameStartIntro() // 게임 시작 후 신분 인트로
@@ -458,5 +721,12 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         ShowPickChancellorInfo(PickChanellorInfo);
 
         yield break;
+    }
+
+    private IEnumerator WaitPanelSeconds(float s, Action callback)
+    {
+        yield return new WaitForSeconds(s);
+
+        callback?.Invoke();
     }
 }
