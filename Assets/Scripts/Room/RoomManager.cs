@@ -341,27 +341,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
                 CheckAllReady();
             }
         }
-
-        if (changedProps.ContainsKey("position")) // 역할이 정해졌다면 포지션 카드 스프라이트 변경
-        {
-            maxPlayer++;
-            playManager.SetPositionCard(targetPlayer);
-        }
-
-        // 해당 조건문은 게임 시작 후 역할 선정 후 최초이자 마지막으로 호출됩니다.
-        if (maxPlayer == PhotonNetwork.CurrentRoom.MaxPlayers) // 모든 플레이어의 포지션이 정해졌다면
-        {
-            maxPlayer = 0;
-
-            // 첫 번째 대통령 지정
-            existRoomProperties["president"] = PhotonNetwork.CurrentRoom.Players[playManager.playerOrder[0]];
-
-            // 현재 순서 저장 (currentOrder 저장)
-            existRoomProperties["currentOrder"] = 0;
-            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-
-            playManager.ShowPositionRPC(); // 역할 보여주기
-        }
     }
 
     // 커스텀 룸 프로퍼티 변경 시 호출 #####################################
