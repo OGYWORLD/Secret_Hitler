@@ -58,6 +58,9 @@ MonoBehaviour:
   - ShowPollInfo
   - SendPollResultToMaster
   - ShowPollResult
+  - PickPolicyByPresident
+  - PickPolicyByChancellor
+  - ShowPickedPolicy
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

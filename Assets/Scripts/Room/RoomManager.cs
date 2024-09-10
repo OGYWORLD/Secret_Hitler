@@ -196,6 +196,12 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         // 현재 생존 인원을 최대 플레이어 수로 지정
         existRoomProperties["liveCnt"] = PhotonNetwork.CurrentRoom.MaxPlayers;
+        existRoomProperties["liberalPolicy"] = 0; // 리버럴 정책 개수
+        existRoomProperties["pacismPolicy"] = 0; // 파시즘 정책 개수
+        existRoomProperties["marker"] = 0; // 추적용 마커 순서
+        existRoomProperties["policyIdx"] = 0; // 현재 정책 순서
+        existRoomProperties["leavePolicyCnt"] = 0; // 버려진 정책 개수
+
         PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
         playManager.PickPosition(); // 역할 뽑기
