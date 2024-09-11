@@ -9,12 +9,16 @@ using System;
 
 using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 
+public delegate void PollButtonDisable(); // 투표 버튼 비활성화 델리게이트
+
 public class PhotonManager : MonoBehaviourPunCallbacks
 {
     public static PhotonManager Instance { get; set; }
     public Dictionary<int, (int, int)> cntDictionary { get; set; } = new Dictionary<int, (int, int)>(); // 인원수에 따른 리버럴, 파시스트 인원수
 
     public List<RoomInfo> roomList { get; set; } = new List<RoomInfo>();
+
+    public PollButtonDisable pollButtonDisable;
 
     private void Awake()
     {

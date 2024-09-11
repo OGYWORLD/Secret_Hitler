@@ -103,6 +103,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         policyBtn[0].onClick.AddListener(() => LeavePolicy(0));
         policyBtn[1].onClick.AddListener(() => LeavePolicy(1));
         policyBtn[2].onClick.AddListener(() => LeavePolicy(2));
+
+        PhotonManager.Instance.pollButtonDisable += OnDeselectButton;
     }
 
     public void InitWhenJoinedRoom()
@@ -233,6 +235,20 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     {
         print("정책을 새로 섞어서 전달합니다. 이 메시지는 모두에게 보여야 합니다.");
         policyArray = p;
+    }
+
+    [PunRPC]
+    public void SetButtonNameInit()
+    {
+        // 게임 시작했으므로 버튼과 제목(안내 문구로 사용하므로) 초기화
+        roomNameText.text = "";
+        readyButton.gameObject.SetActive(false);
+        outButton.gameObject.SetActive(false);
+    }
+
+    public void SetButtonNameInitRPC()
+    {
+        view.RPC("SetButtonNameInit", RpcTarget.All);
     }
 
     public int[] SetPlayerOrder() // 플레이 순서 정하기
@@ -482,14 +498,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
-        // 수상이 누군지 선정
-        print($"selected toggle is {selectedToggle.GetComponentInChildren<Text>().text}");
-        
-        foreach(var n in nameActorDictionary)
-        {
-            print($"{n.Key} {n.Value}");
-        }
-
         existRoomProperties["chancellor"] = PhotonNetwork.CurrentRoom.Players[nameActorDictionary[selectedToggle.GetComponentInChildren<Text>().text]];
         PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
@@ -586,6 +594,13 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             view.RPC("SendPollResultToMaster", RpcTarget.MasterClient,
                 PhotonNetwork.NickName, myJaNein, 1); // 마스터 클라이언트에게 투표 취소 전송
         }
+    }
+    public void OnDeselectButton() // 버튼이 포커스를 잃었을 때 투표 초기화
+    {
+        print("버튼이 포커스를 잃었습니다.");
+        myJaNein = -1;
+        view.RPC("SendPollResultToMaster", RpcTarget.MasterClient,
+                PhotonNetwork.NickName, myJaNein, 1); // 마스터 클라이언트에게 투표 취소 전송
     }
 
     [PunRPC]
@@ -705,7 +720,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
                 }
                 else // 아닐 시 대기
                 {
-                    roomNameText.text = "신성한 의회 단계입니다";
+                    roomNameText.text = "신성한 의회 단계입니다. 정숙해주세요.";
                     StartCoroutine(WaitPanelSeconds(4f, () => { infoPanel.SetActive(false); }));
                 }
             }
@@ -753,6 +768,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     {
         roomNameText.text = "버릴 정책을 선택해주세요";
 
+        
         infoPanel.SetActive(false);
 
         PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
@@ -768,12 +784,13 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             player.SetCustomProperties(h);
         }
 
+        
         PolicyActiveInit();
 
         int policyIdx = (int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"];
 
         Image[] images = policyPanel.GetComponentsInChildren<Image>();
-
+        
         if(policyIdx > totalPolicyNum - 3)
         {
             // 정책 섞기
@@ -781,19 +798,16 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             PassSufflePolicyRPC(policyArray);
 
             // 정책 인덱스 초기화
-            existRoomProperties["policyIdx"] = 0;
-            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-
             policyIdx = 0;
         }
-
+        
         // 정책 카드 이미지 설정
         images[0].sprite = policyImg[policyArray[policyIdx]];
         images[1].sprite = policyImg[policyArray[policyIdx+1]];
         images[2].sprite = policyImg[policyArray[policyIdx+2]];
 
+    
         existRoomProperties["policyIdx"] = policyIdx + 3;
-
         PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
         // 이전 대통령 여부 설정
@@ -801,6 +815,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         PhotonNetwork.LocalPlayer.SetCustomProperties(existPlayerProperties);
 
         policyPanel.SetActive(true);
+
     }
 
     public void LeavePolicy(int n)

@@ -67,7 +67,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.readyButton.gameObject.SetActive(true);
         playManager.outButton.gameObject.SetActive(true);
 
-        // 커스텀 품 프로퍼티 속성 설정 (게임 실행 중인지 아닌지)
+        // 커스텀 룸 프로퍼티 속성 설정 (게임 실행 중인지 아닌지)
         if (PhotonNetwork.IsMasterClient)
         {
             PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
@@ -179,6 +179,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.readyButton.gameObject.SetActive(false);
         playManager.outButton.gameObject.SetActive(false);
 
+        playManager.SetButtonNameInitRPC(); // 버튼과 제목 초기화
         playManager.SufflePolicy(); // 정책카드 섞기
         playManager.PassSufflePolicyRPC(playManager.policyArray); // 섞은 거 RPC로 전달
         playManager.SetPlayerOrder(); // 플레이 순서 정하기
@@ -346,21 +347,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
     // 커스텀 룸 프로퍼티 변경 시 호출 #####################################
     public override void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
     {
-        PhotonHashtable hashTable = PhotonNetwork.CurrentRoom.CustomProperties;
 
-        // 레디 상태 여부에 따른 제목, 레디 버튼, 나가기 버튼 활성화 설정
-        if ((bool)hashTable["ing"]) // 현재 게임 중이라면
-        {
-            playManager.roomNameText.text = "";
-            playManager.readyButton.gameObject.SetActive(false);
-            playManager.outButton.gameObject.SetActive(false);
-        }
-        else if(!(bool)hashTable["ing"]) // 현재 게임 중이 아니라면
-        {
-            playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name;
-            playManager.readyButton.gameObject.SetActive(true);
-            playManager.outButton.gameObject.SetActive(true);
-        }
     }
 
     private IEnumerator ShowChatImageAnim(string name)
