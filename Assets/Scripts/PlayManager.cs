@@ -100,6 +100,10 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public GameObject[] markers; // 추적용 마커 오브젝트 배열
 
+    public bool isStopCountdown = true; // 카운트다운 조기마감용 bool 변수
+    public Text countDownText; // 카운트다운 텍스트
+    public GameObject countDownObj; // 카운트다운 오브젝트
+
     private void Awake()
     {
         chanPickBtn.onClick.AddListener(SetChancellorAndSendPickEnd);
@@ -226,6 +230,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         pollResultPanel.SetActive(false); // 내각 구성 결과 패널 비활성화
         endingPanel.SetActive(false); // 엔딩 패널 비활성화
         policyPanel.SetActive(false); // 정책 안내 패널 비활성화
+
+        countDownObj.SetActive(false); // 카운트다운 오브젝트 비활성화
     }
 
     public int[] SufflePolicy() // 정책 배열 섞기
@@ -242,7 +248,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             {
                 policyArray[i] = policy;
                 liberalCnt--;
-                print($"policyArray[{i}] is {policyArray[i]}");
 
 
                 i++;
@@ -251,7 +256,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             {
                 policyArray[i] = policy;
                 pacistCnt--;
-                print($"policyArray[{i}] is {policyArray[i]}");
 
                 i++;
             }
@@ -268,7 +272,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void PassPSufflePolicy(int[] p)
     {
-        print("정책을 새로 섞어서 전달합니다. 이 메시지는 모두에게 보여야 합니다.");
         policyArray = p;
     }
 
@@ -369,7 +372,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
     }
 
-    // TODO: 게임 종료 후 레디 미완료 문구도 넣어야함
     [PunRPC]
     public void StateInitForGameStart() // 게임 시작 후 레디 상태 문구 지우기
     {
@@ -622,6 +624,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
             pollFinBtn.gameObject.GetComponentInChildren<Text>().text = "투표 변경";
 
+            view.RPC("SetCountDown", RpcTarget.All, true);
+
             view.RPC("SendPollResultToMaster", RpcTarget.MasterClient, 
                 PhotonNetwork.NickName, myJaNein, 0); // 마스터 클라이언트에게 투표 결과 전송
         }
@@ -632,16 +636,11 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
             pollFinBtn.gameObject.GetComponentInChildren<Text>().text = "투표 완료";
 
+            view.RPC("SetCountDown", RpcTarget.All, false);
+
             view.RPC("SendPollResultToMaster", RpcTarget.MasterClient,
                 PhotonNetwork.NickName, myJaNein, 1); // 마스터 클라이언트에게 투표 취소 전송
         }
-    }
-    public void OnDeselectButton() // 버튼이 포커스를 잃었을 때 투표 초기화
-    {
-        print("버튼이 포커스를 잃었습니다.");
-        myJaNein = -1;
-        view.RPC("SendPollResultToMaster", RpcTarget.MasterClient,
-                PhotonNetwork.NickName, myJaNein, 1); // 마스터 클라이언트에게 투표 취소 전송
     }
 
     [PunRPC]
@@ -658,12 +657,37 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         if(pollResultHash.Count == (PhotonNetwork.CurrentRoom.MaxPlayers - 2)) // 모든 사람이 투표를 완료 했다면
         {
+            view.RPC("StartCountDown", RpcTarget.All); // 모두가 카운트다운 시작
+        }
+    }
+
+    [PunRPC]
+    public void StartCountDown()
+    {
+        StartCoroutine(WaitCountDown(10, CalculPollResult));
+    }
+
+    [PunRPC]
+    public void SetCountDown(bool b) // 카운트다운을 멈추거나 동작하기 위한 함수
+    {
+        isStopCountdown = b;
+
+        if(!b) // 만약 카운트다운을 멈춘다면 카운트다운 오브젝트도 활성화
+        {
+            countDownObj.SetActive(false);
+        }
+    }
+
+    public void CalculPollResult()
+    {
+        if(PhotonNetwork.IsMasterClient)
+        {
             string resultS = ""; // 투표 결과를 문자열로 저장하여 전송
-            // "NickName 0 NickName 1 ..." (" "으로 구분)
+                                 // "NickName 0 NickName 1 ..." (" "으로 구분)
 
             int jaCnt = 0;
             int neinCnt = 0;
-            foreach(DictionaryEntry d in pollResultHash)
+            foreach (DictionaryEntry d in pollResultHash)
             {
                 resultS += $"{d.Key} {d.Value} ";
 
@@ -671,7 +695,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
                 if ((int)d.Value == 1) neinCnt++;
             }
 
-            if(jaCnt > neinCnt) // 내각 구성 성공
+            if (jaCnt > neinCnt) // 내각 구성 성공
             {
                 view.RPC("ShowPollResult", RpcTarget.All, resultS, 0);
             }
@@ -737,7 +761,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
                 endingPanel.SetActive(true);
 
-                StartCoroutine(WaitPanelSeconds(5f, InitPos));
+                StartCoroutine(WaitPanelSeconds(8f, InitWhenJoinedRoom));
             }
             else // 정책 뽑기
             {
@@ -777,20 +801,16 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
             int m = (int)existRoomProperties["marker"];
-            
-            if(m == 3) // 연속 3번 무산이라면
+
+            for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
             {
-                existRoomProperties["marker"] = 0;
+                markers[i].SetActive(false);
+            }
 
-                for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
-                {
-                    markers[i].SetActive(false);
-                }
+            markers[m + 1].SetActive(true); //마커 한 칸 전진한 이미지 활성화
 
-                markers[0].SetActive(true); //마커 이미지 초기화
-
-                PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-
+            if (m == 3) // 연속 3번 무산이라면
+            {
                 // panel 보여주기
                 Text[] texts = infoPanel.GetComponentsInChildren<Text>();
 
@@ -802,19 +822,12 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
                 infoPanel.SetActive(true); // TODO: 뒤에 infopanel 비활성화 해줘야 함
 
-                // 바로 위 정책이 발효
+                // 바로 위 정책이 발효 // TODO: InitMarker 함수 호출해줘야함
                 //StartCoroutine(WaitPanelSeconds(5f, PassNextTurn));
             }
             else
             {
                 existRoomProperties["marker"] = m + 1; // 마커 한 칸 전진
-
-                for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
-                {
-                    markers[i].SetActive(false);
-                }
-
-                markers[m + 1].SetActive(true); //마커 한 칸 전진한 이미지 활성화
 
                 PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
@@ -829,9 +842,25 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
                 infoPanel.SetActive(true);
 
-                StartCoroutine(WaitPanelSeconds(5f, PassNextTurn)); // 다음 내각 구성
+                StartCoroutine(WaitPanelSeconds(5f, StarNewTurn)); // 다음 내각 구성
             }
         }
+    }
+
+    public void InitMarker() // 추적용 마커 초기화
+    {
+        PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+
+        existRoomProperties["marker"] = 0;
+
+        for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
+        {
+            markers[i].SetActive(false);
+        }
+
+        markers[0].SetActive(true); //마커 이미지 초기화
+
+        PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
     }
 
     public void ShowAllPositionCard()
@@ -840,11 +869,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         {
             obj.SetActive(true);
         }
-    }
-
-    public void InitPos()
-    {
-        InitWhenJoinedRoom(); // 나머지 초기화 (방 최초 입장 시와 동일하게 초기화)
     }
 
     public void PickPolicyByPresident() // 대통령 정책 뽑기
@@ -1016,7 +1040,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         int special = ReturnPresidentSpecial();
         if (special == -1) // 대통령 특수 권한 없음
         {
-            StartCoroutine(WaitPanelSeconds(5f, StarNewTurn));
+            StartCoroutine(WaitPanelSeconds(8f, StarNewTurn));
         }
         else // 대통령 특수 권한 실행
         {
@@ -1042,7 +1066,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
             endingPanel.SetActive(true);
 
-            StartCoroutine(WaitPanelSeconds(5f, InitPos));
+            StartCoroutine(WaitPanelSeconds(8f, InitWhenJoinedRoom));
         }
         else // 결과 안내 후 다음 내각 의회 구성
         {
@@ -1269,5 +1293,25 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         yield return new WaitForSeconds(s);
 
         callback?.Invoke();
+    }
+
+    private IEnumerator WaitCountDown(float s, Action callback)
+    {
+        countDownObj.SetActive(true);
+
+        float sumTime = 0f;
+        while(isStopCountdown && sumTime <= s)
+        {
+            sumTime += Time.deltaTime;
+            countDownText.text = (s - (int)sumTime).ToString();
+
+            yield return null;
+        }
+
+        if(isStopCountdown)
+        {
+            countDownObj.SetActive(false);
+            callback?.Invoke();
+        }
     }
 }
