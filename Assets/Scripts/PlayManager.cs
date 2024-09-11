@@ -20,6 +20,11 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 { 
     public PhotonView view;
 
+    public TextMeshProUGUI readyOrStartTMP;
+
+    private Color masterColor = new Color(1f, 1f, 144 / 255f);
+    private Color nonReadyColor = new Color(188 / 255f, 188 / 255f, 188 / 255f);
+
     public Text roomNameText;
     public Text stateText;
     public Text chatText;
@@ -104,13 +109,17 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         policyBtn[1].onClick.AddListener(() => LeavePolicy(1));
         policyBtn[2].onClick.AddListener(() => LeavePolicy(2));
 
-        PhotonManager.Instance.pollButtonDisable += OnDeselectButton;
+        readyOrStartTMP = readyButton.GetComponentInChildren<TextMeshProUGUI>();
     }
 
     public void InitWhenJoinedRoom()
     {
+        roomNameText.text = PhotonNetwork.CurrentRoom.Name; // 방 이름 설정
+
+        baseImg.sprite = endingBase[2]; // 배경화면 초기화
+
         // 보드판 인원수에 맞게 등장
-        foreach(GameObject board in pacistBoads)
+        foreach (GameObject board in pacistBoads)
         {
             board.SetActive(false);
         }
@@ -167,15 +176,39 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         playerProperties["beforePre"] = false; // 이전 대통령 초기화
         playerProperties["ready"] = false; // 커스텀 플레이어 프로퍼티 속성 설정 (레디 상태)
 
-        if(PhotonNetwork.IsMasterClient)
+        if (PhotonNetwork.IsMasterClient)
         {
             playerProperties["ready"] = true; // 마스터 플레이어라면 레디를 true로
+
+            PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+
+            existRoomProperties["ing"] = false;
+            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+            PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
+
+            readyOrStartTMP.text = "게임 시작";
+
+            stateText.color = masterColor;
+            stateText.text = "회의 위원장";
+
+            readyButton.interactable = false;
+        }
+        else
+        {
+            playerProperties["ready"] = false;
+            PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
+            readyOrStartTMP.text = "게임 준비";
+
+            stateText.color = nonReadyColor;
+            stateText.text = "회의장으로 가는 중...";
+
+
+            readyButton.interactable = true;
         }
 
-        PhotonNetwork.LocalPlayer.SetCustomProperties(playerProperties);
 
         // 보드판 위 정책 카드 비활성화
-        for(int i = 0; i < pickedLiberal.Length; i++)
+        for (int i = 0; i < pickedLiberal.Length; i++)
         {
             pickedLiberal[i].SetActive(false);
         }
@@ -284,6 +317,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void PickPosition() // 역할 뽑기
     {
+        isSelected.Clear();
+
         totalPosition = new int[PhotonNetwork.CurrentRoom.MaxPlayers];
         for(int i = 0; i < PhotonNetwork.CurrentRoom.MaxPlayers; i++) // 역할 방문 배열 초기화
         {
@@ -389,7 +424,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             existRoomProperties["currentOrder"] = 0;
             PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
-            n = -1;
+            n = 0;
         }
 
         // 첫 번째 대통령 지정
@@ -741,6 +776,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void InitPos()
     {
+        /*
         endingPanel.SetActive(false); // 엔딩 패널 비활성화
 
         baseImg.sprite = endingBase[2]; // 배경화면 초기화
@@ -750,6 +786,26 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             obj.SetActive(false);
         }
 
+        if (PhotonNetwork.IsMasterClient) // 시작 or 레디 버튼 초기화
+        {
+            readyOrStartTMP.text = "게임 시작";
+
+            stateText.color = masterColor;
+            stateText.text = "회의 위원장";
+
+            readyButton.interactable = false;
+        }
+        else
+        {
+            readyOrStartTMP.text = "게임 준비";
+
+            stateText.color = nonReadyColor;
+            stateText.text = "회의장으로 가는 중...";
+
+            readyButton.interactable = true;
+        }
+
+        
         // 게임 종료 상태 설정
         PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
         existRoomProperties["ing"] = false;
@@ -762,6 +818,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             existPlayerProperties["ready"] = false;
             player.SetCustomProperties(existPlayerProperties);
         }
+        */
+        InitWhenJoinedRoom(); // 나머지 초기화 (방 최초 입장 시와 동일하게 초기화)
     }
 
     public void PickPolicyByPresident() // 대통령 정책 뽑기

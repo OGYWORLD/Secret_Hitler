@@ -12,8 +12,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
 {
     public PlayManager playManager;
 
-    private TextMeshProUGUI readyOrStartTMP;
-
     private Color masterColor = new Color(1f, 1f, 144/255f);
     private Color readyColor = new Color(112f/255f, 1f, 249f/255f);
     private Color nonReadyColor = new Color(188/255f, 188 / 255f, 188 / 255f);
@@ -32,7 +30,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
         playManager.readyButton.onClick.AddListener(SetReady);
         playManager.readyButton.onClick.AddListener(StartGame);
 
-        readyOrStartTMP = playManager.readyButton.GetComponentInChildren<TextMeshProUGUI>();
         playManager.settingButtonObj.SetActive(false);
     }
 
@@ -61,50 +58,49 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         playManager.InitWhenJoinedRoom(); // 오브젝트 초기화
 
-        playManager.roomNameText.text = PhotonNetwork.CurrentRoom.Name; // 방 이름 설정
-
         // 버튼들 활성화
-        playManager.readyButton.gameObject.SetActive(true);
-        playManager.outButton.gameObject.SetActive(true);
+        //playManager.readyButton.gameObject.SetActive(true);
+        //playManager.outButton.gameObject.SetActive(true);
 
         // 커스텀 룸 프로퍼티 속성 설정 (게임 실행 중인지 아닌지)
         if (PhotonNetwork.IsMasterClient)
         {
-            PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+            //PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
-            existRoomProperties["ing"] = false;
-            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+            //existRoomProperties["ing"] = false;
+            //PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
         }
 
         if (PhotonNetwork.MasterClient == PhotonNetwork.LocalPlayer) // 방장이라면 게임시작 & 설정창 보이게
         {
             //settingButtonObj.SetActive(true);
-            PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+            //PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
-            existRoomProperties["ready"] = true;
-            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-            readyOrStartTMP.text = "게임 시작";
+            //existRoomProperties["ready"] = true;
+            ///PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+            //playManager.readyOrStartTMP.text = "게임 시작";
 
-            playManager.stateText.color = masterColor;
-            playManager.stateText.text = "회의 위원장";
+            //playManager.stateText.color = masterColor;
+            //playManager.stateText.text = "회의 위원장";
 
-            playManager.readyButton.interactable = false;
+            //playManager.readyButton.interactable = false;
         }
         else
         {
             //settingButtonObj.SetActive(false);
-            PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+            //PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
-            existRoomProperties["ready"] = false;
-            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-            readyOrStartTMP.text = "게임 준비";
+            //existRoomProperties["ready"] = false;
+            //PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+            //playManager.readyOrStartTMP.text = "게임 준비";
 
-            playManager.stateText.color = nonReadyColor;
-            playManager.stateText.text = "회의장으로 가는 중...";
+            //playManager.stateText.color = nonReadyColor;
+            //playManager.stateText.text = "회의장으로 가는 중...";
 
 
-            playManager.readyButton.interactable = true;
+            //playManager.readyButton.interactable = true;
         }
+        
 
         PanelManager.Instance.InitPanel((int)Panel.roomPanel);
     }
@@ -145,14 +141,14 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     public void SetReady() // 레디하기
     {
-        if (PhotonNetwork.LocalPlayer.IsMasterClient) return; // 방장이라면 반환
+        if (PhotonNetwork.IsMasterClient) return; // 방장이라면 반환
 
         PhotonHashtable existPlayerProperties = PhotonNetwork.LocalPlayer.CustomProperties;
 
         if ((bool)PhotonNetwork.LocalPlayer.CustomProperties["ready"] == false) // 레디 상태가 아니라면
         {
             existPlayerProperties["ready"] = true;
-            readyOrStartTMP.text = "준비 취소";
+            playManager.readyOrStartTMP.text = "준비 취소";
 
             playManager.stateText.color = readyColor;
             playManager.stateText.text = "입법 회의 준비 완료";
@@ -160,7 +156,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         else // 레디 상태라면
         {
             existPlayerProperties["ready"] = false;
-            readyOrStartTMP.text = "게임 준비";
+            playManager.readyOrStartTMP.text = "게임 준비";
 
             playManager.stateText.color = nonReadyColor;
             playManager.stateText.text = "회의장으로 가는 중...";
@@ -171,7 +167,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     public void StartGame() // 게임 시작
     {
-        if (PhotonNetwork.MasterClient != PhotonNetwork.LocalPlayer) return; // 방장이 아니라면 반환
+        if (!PhotonNetwork.IsMasterClient) return; // 방장이 아니라면 반환
 
         print("게임 시작 버튼을 눌러야지 호출되는 게임 시작 함수");
 
@@ -201,7 +197,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
         existRoomProperties["pacismPolicy"] = 0; // 파시즘 정책 개수
         existRoomProperties["marker"] = 0; // 추적용 마커 순서
         existRoomProperties["policyIdx"] = 0; // 현재 정책 순서
-        existRoomProperties["leavePolicyCnt"] = 0; // 버려진 정책 개수
 
         PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
@@ -319,7 +314,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             //settingButtonObj.SetActive(true);
             existPlayerProperties["ready"] = true;
             PhotonNetwork.LocalPlayer.SetCustomProperties(existPlayerProperties);
-            readyOrStartTMP.text = "게임 시작";
+            playManager.readyOrStartTMP.text = "게임 시작";
 
             playManager.stateText.color = masterColor;
             playManager.stateText.text = "회의 위원장";
@@ -330,8 +325,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
     // 플레이어 커스텀 프로퍼티가 변경됐다면 호출되는 콜백함수 ####################
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
     {
-        PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-
         if (changedProps.ContainsKey("ready") && 
             !(bool)PhotonNetwork.CurrentRoom.CustomProperties["ing"]) // 레디 상태가 변했다면 state를 바꿔주기
         {

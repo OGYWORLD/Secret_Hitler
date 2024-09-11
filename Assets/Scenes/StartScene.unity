@@ -23346,6 +23346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   view: {fileID: 1339131339}
+  readyOrStartTMP: {fileID: 1699469105}
   roomNameText: {fileID: 1495997717}
   stateText: {fileID: 1881551540}
   chatText: {fileID: 184802132}
