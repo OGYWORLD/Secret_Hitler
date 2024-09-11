@@ -59,7 +59,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public Dictionary<string, int> nameActorDictionary = new Dictionary<string, int>(); // <플레이어, 액터넘버>
 
     private int totalPolicyNum = 17;
-    public int[] policyArray; // 정책 배열 (0: liberal, 1: pacist) liberal 6장, pacist 11장
+    public int[] policyArray = new int[17]; // 정책 배열 (0: liberal, 1: pacist) liberal 6장, pacist 11장
 
     public GameObject chanPanel; // 수상 선택 패널
     public ToggleGroup chanToggleGroup; // 수상 선택 토글 그룹
@@ -95,8 +95,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     private void Awake()
     {
-        policyArray = new int[17];
-
         chanPickBtn.onClick.AddListener(SetChancellorAndSendPickEnd);
         pollCardsBtn[0].onClick.AddListener(() => { myJaNein = 0; pollWaringTextObj.SetActive(false); });
         pollCardsBtn[1].onClick.AddListener(() => { myJaNein = 1; pollWaringTextObj.SetActive(false); });
@@ -195,6 +193,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public int[] SufflePolicy() // 정책 배열 섞기
     {
+        print($"policyArray Length is {policyArray.Length}");
         int liberalCnt = 6;
         int pacistCnt = 11;
 
@@ -206,6 +205,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             {
                 policyArray[i] = policy;
                 liberalCnt--;
+                print($"policyArray[{i}] is {policyArray[i]}");
+
 
                 i++;
             }
@@ -213,6 +214,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             {
                 policyArray[i] = policy;
                 pacistCnt--;
+                print($"policyArray[{i}] is {policyArray[i]}");
 
                 i++;
             }
@@ -363,11 +365,19 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void SetPresidentandCurrentOrder(int n) // 대통령 수상 선정
     {
-        // 여기 부분을 대통령, 수상 선정 으로 함수로 빼서 하셈
         PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
+        if (n >= PhotonNetwork.CurrentRoom.MaxPlayers - 1) // 구성원 수 보다 커지면 인덱스 초기화 (한 바퀴 돌음)
+        {
+            PhotonHashtable exsistRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+            existRoomProperties["currentOrder"] = 0;
+            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
+            n = -1;
+        }
+
         // 첫 번째 대통령 지정
-        existRoomProperties["president"] = PhotonNetwork.CurrentRoom.Players[playerOrder[n]]; // !!ERROR!! index out
+        existRoomProperties["president"] = PhotonNetwork.CurrentRoom.Players[playerOrder[n]];
 
         // 현재 순서 저장 (currentOrder 저장)
         existRoomProperties["currentOrder"] = n;
@@ -380,8 +390,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         Text[] texts = infoPanel.GetComponentsInChildren<Text>();
 
         texts[0].text = "내각 구성을 시작합니다"; 
-        texts[1].text = "대통령"; 
-        texts[2].text = PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonNetwork.CurrentRoom.CustomProperties["currentOrder"]]].NickName; // TODO: currentOrder 증가할 때 0으로 초기화
+        texts[1].text = "대통령";
+        print(PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonNetwork.CurrentRoom.CustomProperties["currentOrder"]]].NickName);
+        texts[2].text = PhotonNetwork.CurrentRoom.Players[playerOrder[(int)PhotonNetwork.CurrentRoom.CustomProperties["currentOrder"]]].NickName;
         if((int)PhotonNetwork.CurrentRoom.CustomProperties["currentOrder"] == PhotonNetwork.CurrentRoom.MaxPlayers -1)
         {
             texts[3].text = $"다음 대통령은 {PhotonNetwork.CurrentRoom.Players[playerOrder[0]].NickName} 입니다.";
@@ -646,6 +657,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public void ShowPolicyPick(int result)
     {
         pollResultPanel.SetActive(false);
+        roomNameText.text = "";
 
         if (result == 0) // 내각 구성에 성공했다면 투표 진행
         {
@@ -668,7 +680,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             else // 정책 뽑기
             {
                 infoPanel.SetActive(false);
-                roomNameText.text = "";
 
                 // 정책 뽑는다 info panel 나오기
                 Text[] texts = infoPanel.GetComponentsInChildren<Text>();
@@ -772,9 +783,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             // 정책 인덱스 초기화
             existRoomProperties["policyIdx"] = 0;
             PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-        }
 
-        print($"PhotonNetwork.CurrentRoom.CustomProperties[policyIdx] is {PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"]}");
+            policyIdx = 0;
+        }
 
         // 정책 카드 이미지 설정
         images[0].sprite = policyImg[policyArray[policyIdx]];
@@ -799,7 +810,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         {
             policyPanel.SetActive(false);
 
-            roomNameText.text = "수상께서 정책 선정 중입니다";
+            roomNameText.text = $"{((Player)PhotonNetwork.CurrentRoom.CustomProperties["chancellor"]).NickName}이(가) 정책 선정 중입니다";
 
             // 수상에게 넘기기
             view.RPC("PickPolicyByChancellor", (Player)PhotonNetwork.CurrentRoom.CustomProperties["chancellor"], n);
@@ -867,13 +878,13 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             // 정책 결과 안내
             textInfo[0].text = "이번 의회 결과는 리버럴입니다";
             textInfo[1].text = "";
-            textInfo[2].text = $"사용된 정책 수 {(int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"] - 1}"; // 버려진 정책 수
+            textInfo[2].text = $"사용된 정책 수 {(int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"]}"; // 버려진 정책 수
             textInfo[3].text = "";
             textInfo[4].text = "";
 
             infoPanel.SetActive(true);
 
-            StartCoroutine(WaitPanelSeconds(10f, () => { LiberalPolicyResult(); }));
+            StartCoroutine(WaitPanelSeconds(4f, () => { LiberalPolicyResult(); }));
             
         }
         else // 뽑힌 정책이 파시즘이라면
@@ -889,13 +900,13 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             // 정책 결과 안내
             textInfo[0].text = "이번 의회 결과는 파시즘입니다";
             textInfo[1].text = "";
-            textInfo[2].text = $"사용된 정책 수 {(int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"] - 1}"; // 남은 정책
+            textInfo[2].text = $"사용된 정책 수 {(int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"]}"; // 남은 정책
             textInfo[3].text = "";
             textInfo[4].text = "";
 
             infoPanel.SetActive(true);
 
-            StartCoroutine(WaitPanelSeconds(10f, PacismPolicyResult));
+            StartCoroutine(WaitPanelSeconds(4f, PacismPolicyResult));
             
         }
     }
@@ -950,24 +961,21 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
             int co = (int)PhotonNetwork.CurrentRoom.CustomProperties["currentOrder"];
 
-            print($"현재 currentOrder {co} | 이 메시지는 마스터만 표시되어야 합니다.");
-
-            if (co >= PhotonNetwork.CurrentRoom.MaxPlayers - 1) // 구성원 수 보다 커지면 인덱스 초기화 (한 바퀴 돌음)
-            {
-                print($"currentOrder {co} 가 PhotonNetwork.CurrentRoom.MaxPlayers-1인 {PhotonNetwork.CurrentRoom.MaxPlayers - 1} 큽니다.| 이 메시지는 마스터만 표시되어야 합니다.");
-                PhotonHashtable exsistRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-                existRoomProperties["currentOrder"] = 0;
-                PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-
-                co = -1;
-            }
-
-            print($"업데이트 된 currentOrder {co} | 이 메시지는 마스터만 표시되어야 합니다.");
-
             SetPresidentandCurrentOrder(co + 1);
-        }
 
+            PassNextTurnRPC();
+        }
+    }
+
+    [PunRPC]
+    public void PassNextTurn()
+    {
         ShowPickChancellorInfo(PickChanellorInfo);
+    }
+
+    public void PassNextTurnRPC()
+    {
+        view.RPC("PassNextTurn", RpcTarget.All);
     }
 
     // TODO: enum으로 해서 대통력 특별 권한 <enum, 함수(되나?)> 해서 반환 
