@@ -98,6 +98,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public GameObject[] pickedLiberal; // 보드판 위 리버럴 정책 배열
     public GameObject[] pickedPacist; // 보드판 위 파시스트 정책 배열
 
+    public GameObject[] markers; // 추적용 마커 오브젝트 배열
+
     private void Awake()
     {
         chanPickBtn.onClick.AddListener(SetChancellorAndSendPickEnd);
@@ -378,6 +380,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             Text state = obj.Value.GetComponentsInChildren<Text>()[1];
             state.text = "";
         }
+
+        markers[0].SetActive(true); // 추적용 마커 활성화
     }
 
     public void StateInitForGameStartRPC()
@@ -437,6 +441,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void ShowPickChancellorInfo(Action pickChancellor) // 수상 뽑으라고 안내
     {
+        infoPanel.SetActive(false);
+
         // 0: 내각구성, 1: 대통령, 2: 대통령이름, 3: 다음 대통령, 4: 대통령은 수상을 선정~
         Text[] texts = infoPanel.GetComponentsInChildren<Text>();
 
@@ -711,6 +717,12 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         if (result == 0) // 내각 구성에 성공했다면 투표 진행
         {
+            // 추적용 마커 초기화
+            PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+            existRoomProperties["marker"] = 0;
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
             // 파시즘 정책이 3개 이상 발의되었고 수상이 히틀러이라면 종료
             if ((int)PhotonNetwork.CurrentRoom.CustomProperties["pacismPolicy"] >= 3
                 && (Position)((Player)PhotonNetwork.CurrentRoom.CustomProperties["chancellor"]).CustomProperties["position"] == Position.hitler)
@@ -762,7 +774,63 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else // 내각 구성에 실패했다면 추적용 마커 1칸 전진
         {
-            print("내각 구성 실패~");
+            PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+
+            int m = (int)existRoomProperties["marker"];
+            
+            if(m == 3) // 연속 3번 무산이라면
+            {
+                existRoomProperties["marker"] = 0;
+
+                for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
+                {
+                    markers[i].SetActive(false);
+                }
+
+                markers[0].SetActive(true); //마커 이미지 초기화
+
+                PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
+                // panel 보여주기
+                Text[] texts = infoPanel.GetComponentsInChildren<Text>();
+
+                texts[0].text = "내각이 무산 되었습니다";
+                texts[1].text = "";
+                texts[2].text = $"추적용 마커 연속 3칸 이동"; // TODO: 내각 구성 성공하면 marker 초기화
+                texts[3].text = "";
+                texts[4].text = "가장 상위 더미 정책이 강제로 발의됩니다.";
+
+                infoPanel.SetActive(true); // TODO: 뒤에 infopanel 비활성화 해줘야 함
+
+                // 바로 위 정책이 발효
+                //StartCoroutine(WaitPanelSeconds(5f, PassNextTurn));
+            }
+            else
+            {
+                existRoomProperties["marker"] = m + 1; // 마커 한 칸 전진
+
+                for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
+                {
+                    markers[i].SetActive(false);
+                }
+
+                markers[m + 1].SetActive(true); //마커 한 칸 전진한 이미지 활성화
+
+                PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
+                // panel 보여주기
+                Text[] texts = infoPanel.GetComponentsInChildren<Text>();
+
+                texts[0].text = "내각이 무산 되었습니다";
+                texts[1].text = "";
+                texts[2].text = $"추적용 마커 1 전진";
+                texts[3].text = "";
+                texts[4].text = "다음 내각을 구성합니다.";
+
+                infoPanel.SetActive(true);
+
+                StartCoroutine(WaitPanelSeconds(5f, PassNextTurn)); // 다음 내각 구성
+            }
         }
     }
 
@@ -776,49 +844,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void InitPos()
     {
-        /*
-        endingPanel.SetActive(false); // 엔딩 패널 비활성화
-
-        baseImg.sprite = endingBase[2]; // 배경화면 초기화
-
-        foreach (GameObject obj in cardDictionary.Values) // 신분 카드 비활성화
-        {
-            obj.SetActive(false);
-        }
-
-        if (PhotonNetwork.IsMasterClient) // 시작 or 레디 버튼 초기화
-        {
-            readyOrStartTMP.text = "게임 시작";
-
-            stateText.color = masterColor;
-            stateText.text = "회의 위원장";
-
-            readyButton.interactable = false;
-        }
-        else
-        {
-            readyOrStartTMP.text = "게임 준비";
-
-            stateText.color = nonReadyColor;
-            stateText.text = "회의장으로 가는 중...";
-
-            readyButton.interactable = true;
-        }
-
-        
-        // 게임 종료 상태 설정
-        PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-        existRoomProperties["ing"] = false;
-        PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-        
-        // 레디 상태 설정
-        PhotonHashtable existPlayerProperties = PhotonNetwork.LocalPlayer.CustomProperties;
-        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
-        {
-            existPlayerProperties["ready"] = false;
-            player.SetCustomProperties(existPlayerProperties);
-        }
-        */
         InitWhenJoinedRoom(); // 나머지 초기화 (방 최초 입장 시와 동일하게 초기화)
     }
 
