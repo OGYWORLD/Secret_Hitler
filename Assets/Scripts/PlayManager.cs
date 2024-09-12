@@ -232,6 +232,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         policyPanel.SetActive(false); // 정책 안내 패널 비활성화
 
         countDownObj.SetActive(false); // 카운트다운 오브젝트 비활성화
+
+        InitMarker(); // 추적용 마커 초기화
     }
 
     public int[] SufflePolicy() // 정책 배열 섞기
@@ -697,10 +699,21 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
             if (jaCnt > neinCnt) // 내각 구성 성공
             {
+                // 추적용 마커 초기화
+                PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+                existRoomProperties["marker"] = 0;
+
+                PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
                 view.RPC("ShowPollResult", RpcTarget.All, resultS, 0);
             }
             else // 내각 구성 실패
             {
+                PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+                existRoomProperties["marker"] = (int)existRoomProperties["marker"] + 1; // 마커 한 칸 전진
+
+                PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
                 view.RPC("ShowPollResult", RpcTarget.All, resultS, 1);
             }
         }
@@ -731,6 +744,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             }
         }
 
+
         StartCoroutine(WaitPanelSeconds(4f, () => ShowPolicyPick(result))); // 투표 패널 비활성화
     }
 
@@ -741,11 +755,12 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         if (result == 0) // 내각 구성에 성공했다면 투표 진행
         {
-            // 추적용 마커 초기화
-            PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-            existRoomProperties["marker"] = 0;
+            for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
+            {
+                markers[i].SetActive(false);
+            }
 
-            PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+            markers[0].SetActive(true); //마커 이미지 초기화
 
             // 파시즘 정책이 3개 이상 발의되었고 수상이 히틀러이라면 종료
             if ((int)PhotonNetwork.CurrentRoom.CustomProperties["pacismPolicy"] >= 3
@@ -807,7 +822,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
                 markers[i].SetActive(false);
             }
 
-            markers[m + 1].SetActive(true); //마커 한 칸 전진한 이미지 활성화
+            markers[m].SetActive(true); //마커 한 칸 전진한 이미지 활성화
 
             if (m == 3) // 연속 3번 무산이라면
             {
@@ -827,9 +842,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             }
             else
             {
-                existRoomProperties["marker"] = m + 1; // 마커 한 칸 전진
-
-                PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+                infoPanel.SetActive(false);
 
                 // panel 보여주기
                 Text[] texts = infoPanel.GetComponentsInChildren<Text>();
@@ -837,7 +850,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
                 texts[0].text = "내각이 무산 되었습니다";
                 texts[1].text = "";
                 texts[2].text = $"추적용 마커 1 전진";
-                texts[3].text = "";
+                texts[3].text = $"현재 연속 무산 횟수 {m}번";
                 texts[4].text = "다음 내각을 구성합니다.";
 
                 infoPanel.SetActive(true);
