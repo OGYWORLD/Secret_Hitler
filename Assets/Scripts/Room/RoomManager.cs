@@ -16,8 +16,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private Color readyColor = new Color(112f/255f, 1f, 249f/255f);
     private Color nonReadyColor = new Color(188/255f, 188 / 255f, 188 / 255f);
 
-    private int maxPlayer; // 모든 인원에 대한 커스텀 플레이어 프로퍼티 수정 콜백함수가 호출됐는지 카운트하기 위한 변수
-
     private void Awake()
     {
         playManager.chatInputField.onEndEdit.AddListener(SendChattingMessage);
@@ -57,51 +55,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         PhotonChatManager.Instance.ConnectToServer(PhotonNetwork.CurrentRoom.Name); // 채팅 서버 연결
 
         playManager.InitWhenJoinedRoom(); // 오브젝트 초기화
-
-        // 버튼들 활성화
-        //playManager.readyButton.gameObject.SetActive(true);
-        //playManager.outButton.gameObject.SetActive(true);
-
-        // 커스텀 룸 프로퍼티 속성 설정 (게임 실행 중인지 아닌지)
-        if (PhotonNetwork.IsMasterClient)
-        {
-            //PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-
-            //existRoomProperties["ing"] = false;
-            //PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-        }
-
-        if (PhotonNetwork.MasterClient == PhotonNetwork.LocalPlayer) // 방장이라면 게임시작 & 설정창 보이게
-        {
-            //settingButtonObj.SetActive(true);
-            //PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-
-            //existRoomProperties["ready"] = true;
-            ///PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-            //playManager.readyOrStartTMP.text = "게임 시작";
-
-            //playManager.stateText.color = masterColor;
-            //playManager.stateText.text = "회의 위원장";
-
-            //playManager.readyButton.interactable = false;
-        }
-        else
-        {
-            //settingButtonObj.SetActive(false);
-            //PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-
-            //existRoomProperties["ready"] = false;
-            //PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
-            //playManager.readyOrStartTMP.text = "게임 준비";
-
-            //playManager.stateText.color = nonReadyColor;
-            //playManager.stateText.text = "회의장으로 가는 중...";
-
-
-            //playManager.readyButton.interactable = true;
-        }
         
-
         PanelManager.Instance.InitPanel((int)Panel.roomPanel);
     }
 
