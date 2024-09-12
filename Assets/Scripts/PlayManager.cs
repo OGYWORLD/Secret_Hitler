@@ -233,7 +233,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         countDownObj.SetActive(false); // 카운트다운 오브젝트 비활성화
 
-        InitMarker(); // 추적용 마커 초기화
+        if(PhotonNetwork.IsMasterClient)
+            InitMarker(); // 추적용 마커 초기화
+        InitMarkerActive(); // 추적용 마커 오브젝트 초기화
     }
 
     public int[] SufflePolicy() // 정책 배열 섞기
@@ -562,6 +564,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public void ShowPollInfo()
     {
         chanPanel.SetActive(false);
+        infoPanel.SetActive(false);
 
         roomNameText.text = "";
 
@@ -699,11 +702,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
             if (jaCnt > neinCnt) // 내각 구성 성공
             {
-                // 추적용 마커 초기화
-                PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
-                existRoomProperties["marker"] = 0;
-
-                PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+                InitMarker(); // 추적용 마커 초기화
 
                 view.RPC("ShowPollResult", RpcTarget.All, resultS, 0);
             }
@@ -755,12 +754,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         if (result == 0) // 내각 구성에 성공했다면 투표 진행
         {
-            for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
-            {
-                markers[i].SetActive(false);
-            }
-
-            markers[0].SetActive(true); //마커 이미지 초기화
+            InitMarkerActive(); // 마커 오브젝트 초기화
 
             // 파시즘 정책이 3개 이상 발의되었고 수상이 히틀러이라면 종료
             if ((int)PhotonNetwork.CurrentRoom.CustomProperties["pacismPolicy"] >= 3
@@ -826,6 +820,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
             if (m == 3) // 연속 3번 무산이라면
             {
+                infoPanel.SetActive(false);
                 // panel 보여주기
                 Text[] texts = infoPanel.GetComponentsInChildren<Text>();
 
@@ -835,10 +830,12 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
                 texts[3].text = "";
                 texts[4].text = "가장 상위 더미 정책이 강제로 발의됩니다.";
 
-                infoPanel.SetActive(true); // TODO: 뒤에 infopanel 비활성화 해줘야 함
+                infoPanel.SetActive(true);
 
-                // 바로 위 정책이 발효 // TODO: InitMarker 함수 호출해줘야함
-                //StartCoroutine(WaitPanelSeconds(5f, PassNextTurn));
+                if(PhotonNetwork.IsMasterClient) // 마스터 클라이언트가 바로 위 정책이 발의
+                {
+                    StartCoroutine(WaitPanelSeconds(5f, ForceMotion));
+                }
             }
             else
             {
@@ -860,20 +857,52 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
     }
 
+    public void ForceMotion()
+    {
+        // 인덱스 설정
+        int m = (int)PhotonNetwork.CurrentRoom.CustomProperties["marker"];
+
+        PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+
+        InitPre(); // 이전 대통령, 수상 여부 초기화
+
+        int policyIdx = (int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"];
+
+        if (policyIdx > totalPolicyNum - 1) // 남은 정책 개수가 부족한지 확인
+        {
+            // 정책 섞기
+            SufflePolicy();
+            PassSufflePolicyRPC(policyArray);
+
+            // 정책 인덱스 초기화
+            policyIdx = 0;
+        }
+
+        existRoomProperties["policyIdx"] = policyIdx + 1;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
+        InitMarker(); // 마커 초기화
+
+        view.RPC("ShowPickedPolicy", RpcTarget.All, 0, 1); // 정책 보여주기
+    }
+
     public void InitMarker() // 추적용 마커 초기화
     {
         PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
         existRoomProperties["marker"] = 0;
 
+        PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+    }
+
+    public void InitMarkerActive() // 추적용 마커 오브젝트 초기화
+    {
         for (int i = 0; i < markers.Length; i++) // 마커 활성화 초기화
         {
             markers[i].SetActive(false);
         }
 
         markers[0].SetActive(true); //마커 이미지 초기화
-
-        PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
     }
 
     public void ShowAllPositionCard()
@@ -888,30 +917,16 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     {
         roomNameText.text = "버릴 정책을 선택해주세요";
 
-        
         infoPanel.SetActive(false);
 
         PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
         PhotonHashtable existPlayerProperties = PhotonNetwork.LocalPlayer.CustomProperties;
 
-        // 이전 대통령, 수상 여부 초기화
-        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
-        {
-            PhotonHashtable h = player.CustomProperties;
-            h["beforePre"] = false;
-            h["beforeChan"] = false;
-
-            player.SetCustomProperties(h);
-        }
-
-        
-        PolicyActiveInit();
+        InitPre(); // 이전 대통령, 수상 여부 초기화
 
         int policyIdx = (int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"];
-
-        Image[] images = policyPanel.GetComponentsInChildren<Image>();
         
-        if(policyIdx > totalPolicyNum - 3)
+        if(policyIdx > totalPolicyNum - 3) // 남은 정책 개수가 부족한지 확인
         {
             // 정책 섞기
             SufflePolicy();
@@ -920,7 +935,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             // 정책 인덱스 초기화
             policyIdx = 0;
         }
-        
+
+        Image[] images = policyPanel.GetComponentsInChildren<Image>();
+
         // 정책 카드 이미지 설정
         images[0].sprite = policyImg[policyArray[policyIdx]];
         images[1].sprite = policyImg[policyArray[policyIdx+1]];
@@ -935,7 +952,18 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         PhotonNetwork.LocalPlayer.SetCustomProperties(existPlayerProperties);
 
         policyPanel.SetActive(true);
+    }
 
+    public void InitPre()
+    {
+        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
+        {
+            PhotonHashtable h = player.CustomProperties;
+            h["beforePre"] = false;
+            h["beforeChan"] = false;
+
+            player.SetCustomProperties(h);
+        }
     }
 
     public void LeavePolicy(int n)
@@ -955,7 +983,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             policyPanel.SetActive(false);
 
             // 정책 발의
-            view.RPC("ShowPickedPolicy", RpcTarget.All, n);
+            view.RPC("ShowPickedPolicy", RpcTarget.All, n, 0);
         }
     }
 
@@ -985,13 +1013,24 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         policyPanel.SetActive(true);
     }
 
+    /// <summary>
+    /// 정책을 보여주는 PunRPC 메서드 입니다.
+    /// </summary>
+    /// <param name="n">왼쪽부터 0, 1, 2라고 했을 때 뽑힌 정책의 인덱스</param>
+    /// <param name="c">c == 0: 일반 정책 발의, c == 1: 강제 정책 발의</param>
     [PunRPC]
-    public void ShowPickedPolicy(int n)
+    public void ShowPickedPolicy(int n, int c) // 정책 보여주기
     {
+        InitMarkerActive(); // 마커 초기화
+
         roomNameText.text = "";
         chatInputField.interactable = true;
 
-        int curPickedPolicy = policyArray[(int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"] - 3 + n];
+        int curPickedPolicy;
+        if (c == 0)
+            curPickedPolicy = policyArray[(int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"] - 3 + n];
+        else
+            curPickedPolicy = policyArray[(int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"] - 1];
 
         // 결과 안내
         infoPanel.SetActive(false);
