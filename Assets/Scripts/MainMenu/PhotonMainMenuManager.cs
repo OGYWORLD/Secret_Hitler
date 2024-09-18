@@ -35,7 +35,6 @@ public class PhotonMainMenuManager : MonoBehaviourPunCallbacks
         int index = 0;
         foreach(RoomInfo room in PhotonManager.Instance.roomList)
         {
-            // TODO: 게임이 시작된 방이면 목록에서 안 보이게 (중도 탈주 고려)
             if (room.MaxPlayers != room.PlayerCount) // 방이 만원이면 목록에서 안 보이게
             {
                 // 방 정보 수정
