@@ -41,6 +41,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public Text chatText;
     public GameObject chatObj;
     public GameObject myPosObj;
+    public GameObject myCard;
 
     public GameObject[] nameCards;
     public Transform[] cardTrans;
@@ -131,11 +132,23 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public Button prePickBtn; // 다음 대통령 강제 선정 버튼
 
+    public Sprite deadImage; // 죽은 사람의 card image
+    public Sprite cardImage; // 기본 card image
+
+    public GameObject killPanel; // 처형 패널
+    public ToggleGroup killToggleGroup; // 처형 토글 그룹
+    public Toggle[] killToggles; // 처형 토글 배열
+
+    public Button killBtn; // 처형 버튼
+
+    public Image[] policyPeekImages; // 정책 미리보기의 Images
+
 
     private void Awake()
     {
         chanPickBtn.onClick.AddListener(SetChancellorAndSendPickEnd);
         prePickBtn.onClick.AddListener(SetNextPresident);
+        killBtn.onClick.AddListener(KillSomeone);
 
         pollCardsBtn[0].onClick.AddListener(() => { myJaNein = 0; pollWaringTextObj.SetActive(false); });
         pollCardsBtn[1].onClick.AddListener(() => { myJaNein = 1; pollWaringTextObj.SetActive(false); });
@@ -216,6 +229,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         foreach(GameObject obj in cardDictionary.Values)
         {
             obj.transform.GetChild(3).gameObject.SetActive(false);
+            obj.GetComponent<Image>().sprite = cardImage;
         }
 
         // info panel 비활성화
@@ -444,12 +458,20 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public void SetPlayerCustomForPosition() // 포지션 뽑기
     {
         int index = 0;
-        foreach (var player in PhotonNetwork.CurrentRoom.Players.Values)
+
+        Player hitler = null;
+        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
         {
             // 플레이어 커스텀 프로퍼티(포지션 - 리버럴, 파시스트, 히틀러) 지정
             PhotonHashtable existPlayerProperties = player.CustomProperties;
 
             existPlayerProperties["position"] = (Position)totalPosition[index];
+
+            if ((Position)totalPosition[index] == Position.hitler) // 만약 히틀러라면 room property에 저장
+            {
+                hitler = player;
+            }
+
             player.SetCustomProperties(existPlayerProperties);
 
             view.RPC("SetPositionCard", RpcTarget.All, player);
@@ -457,7 +479,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             index++;
         }
 
-        // 여기 부분을 대통령, 수상 선정 으로 함수로 빼서 하셈
         PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
         // 첫 번째 대통령 지정
@@ -465,6 +486,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         // 현재 순서 저장 (currentOrder 저장)
         existRoomProperties["currentOrder"] = 0;
+
+        existRoomProperties["hitler"] = hitler; // 히틀러 저장
+
         PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
         ShowPositionRPC(); // 역할 보여주기
@@ -706,7 +730,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
         // 다음 라운드 진행
-        PassNextTurnRPC();
+        StartCoroutine(WaitPanelSeconds(3f, PassNextTurnRPC));
 
     }
 
@@ -812,7 +836,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             pollResultHash.Remove(name);
         }
 
-        if(pollResultHash.Count == (PhotonNetwork.CurrentRoom.MaxPlayers - 2)) // 모든 사람이 투표를 완료 했다면
+        if(pollResultHash.Count == ((int)PhotonNetwork.CurrentRoom.CustomProperties["liveCnt"] - 2)) // 모든 사람이 투표를 완료 했다면
         {
             view.RPC("StartCountDown", RpcTarget.All); // 모두가 카운트다운 시작
         }
@@ -821,7 +845,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void StartCountDown()
     {
-        StartCoroutine(WaitCountDown(10, CalculPollResult));
+        StartCoroutine(WaitCountDown(5f, CalculPollResult));
     }
 
     [PunRPC]
@@ -912,17 +936,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             if ((int)PhotonNetwork.CurrentRoom.CustomProperties["pacismPolicy"] >= 3
                 && (Position)((Player)PhotonNetwork.CurrentRoom.CustomProperties["chancellor"]).CustomProperties["position"] == Position.hitler)
             {
-                baseImg.sprite = endingBase[0]; // 파시즘 배경으로 교환
-
-                Text[] texts = endingPanel.GetComponentsInChildren<Text>();
-                texts[0].text = "파시스트가 승리하였습니다";
-                texts[1].text = "파시즘 정책 3개 이상 발의 후 히틀러 수상";
-
-                ShowAllPositionCard();
-
-                endingPanel.SetActive(true);
-
-                StartCoroutine(WaitPanelSeconds(8f, InitWhenJoinedRoom));
+                StartCoroutine(WaitPanelSeconds(3f, () => { PacistWin("파시즘 정책 3개 이상 발의 후 히틀러 수상"); }));
             }
             else // 정책 뽑기
             {
@@ -1007,6 +1021,21 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
                 StartCoroutine(WaitPanelSeconds(5f, StartNewTurn)); // 다음 내각 구성
             }
         }
+    }
+
+    public void PacistWin(string reason)
+    {
+        baseImg.sprite = endingBase[0]; // 파시즘 배경으로 교환
+
+        Text[] texts = endingPanel.GetComponentsInChildren<Text>();
+        texts[0].text = "파시스트가 승리하였습니다";
+        texts[1].text = reason;
+
+        ShowAllPositionCard();
+
+        endingPanel.SetActive(true);
+
+        StartCoroutine(WaitPanelSeconds(8f, InitWhenJoinedRoom));
     }
 
     public void ForceMotion()
@@ -1243,7 +1272,11 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         Text[] textInfo = infoPanel.GetComponentsInChildren<Text>();
 
         int special = ReturnPresidentSpecial();
-        if (special == -1) // 대통령 특수 권한 없음
+        if((int)PhotonNetwork.CurrentRoom.CustomProperties["pacismPolicy"] == 6) // 파시즘 정책 6개 발의로 승리
+        {
+            StartCoroutine(WaitPanelSeconds(3f, () => { PacistWin("파시즘 정책 6개 발의"); }));
+        }
+        else if (special == -1) // 대통령 특수 권한 없음
         {
             StartCoroutine(WaitPanelSeconds(4f, StartNewTurn));
         }
@@ -1301,8 +1334,96 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             textInfo[4].text = "다른 한 사람을 처형합니다.";
 
             infoPanel.SetActive(true);
+
+            StartCoroutine(WaitPanelSeconds(4f, KillRPC));
         }
 
+    }
+
+    public void KillRPC()
+    {
+        if (PhotonNetwork.IsMasterClient)
+            view.RPC("ShowKillCandidate", (Player)PhotonNetwork.CurrentRoom.CustomProperties["president"]);
+    }
+
+    [PunRPC]
+    public void ShowKillCandidate() // 토글 그룹에 처형 대상 목록 출력
+    {
+        killPanel.SetActive(false);
+        ToggleListInit(killToggles);
+
+        int index = 0;
+        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
+        {
+            if (player != PhotonNetwork.LocalPlayer && !(bool)player.CustomProperties["dead"])
+            {
+                killToggles[index].GetComponentInChildren<Text>().text = player.NickName;
+                killToggles[index].name = player.NickName;
+                killToggles[index].gameObject.SetActive(true);
+
+                index++;
+            }
+        }
+
+        killToggles[0].isOn = true;
+
+        killPanel.SetActive(true);
+    }
+
+    public void KillSomeone()
+    {
+        Toggle selectedToggle = null;
+
+        // 누굴 선정했는지 가져오기
+        int cnt = 0;
+        foreach (Toggle t in killToggleGroup.ActiveToggles())
+        {
+            selectedToggle = t;
+            cnt++;
+            break;
+        }
+
+        if (cnt == 0) return; // 처형 대상이 선택되지 않았음
+
+        PhotonHashtable existPlayerProperties = PhotonNetwork.CurrentRoom.Players[nameActorDictionary[selectedToggle.GetComponentInChildren<Text>().text]].CustomProperties;
+
+        existPlayerProperties["dead"] = true;
+        PhotonNetwork.CurrentRoom.Players[nameActorDictionary[selectedToggle.GetComponentInChildren<Text>().text]].SetCustomProperties(existPlayerProperties);
+
+        // LiveCnt 변경
+        PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
+        existRoomProperties["liveCnt"] = (int)existRoomProperties["liveCnt"] - 1;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
+        killPanel.SetActive(false);
+
+        // 모든 사람의 프로필에 죽은 사람의 네임 카드 변경
+        view.RPC("ChangeNameCardForDead", RpcTarget.All, selectedToggle.GetComponentInChildren<Text>().text);
+    }
+
+    [PunRPC]
+    public void ChangeNameCardForDead(string name) // 모든 사람의 프로필에 죽은 사람의 네임 카드 변경
+    {
+        roomNameText.text = $"{name}이(가) 사망하였습니다";
+
+        if (PhotonNetwork.LocalPlayer.NickName == name)
+        {
+            myCard.GetComponent<Image>().sprite = deadImage;
+        }
+        else
+        {
+            cardDictionary[name].GetComponent<Image>().sprite = deadImage;
+        }
+
+        // 만약 죽은 사람이 히틀러라면 리버럴의 승리
+        if(PhotonNetwork.CurrentRoom.Players[nameActorDictionary[name]] == PhotonNetwork.CurrentRoom.CustomProperties["hitler"])
+        {
+            StartCoroutine(WaitPanelSeconds(4f, () => { LiberalWin("히틀러 처형"); }));
+        }
+        else
+        {
+            StartCoroutine(WaitPanelSeconds(4f, StartNewTurn));
+        }
     }
 
     public void CheckIdentityRPC()
@@ -1406,7 +1527,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         int policyIdx = (int)PhotonNetwork.CurrentRoom.CustomProperties["policyIdx"];
 
-        if (policyIdx > totalPolicyNum - 1) // 남은 정책 개수가 부족한지 확인
+        if (policyIdx > totalPolicyNum - 3) // 남은 정책 개수가 부족한지 확인
         {
             // 정책 섞기
             SufflePolicy();
@@ -1417,9 +1538,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
 
         // 정책 카드 이미지 설정
-        policyImages[0].sprite = policyImg[policyArray[policyIdx]];
-        policyImages[1].sprite = policyImg[policyArray[policyIdx + 1]];
-        policyImages[2].sprite = policyImg[policyArray[policyIdx + 2]];
+        policyPeekImages[0].sprite = policyImg[policyArray[policyIdx]];
+        policyPeekImages[1].sprite = policyImg[policyArray[policyIdx + 1]];
+        policyPeekImages[2].sprite = policyImg[policyArray[policyIdx + 2]];
 
         policyPeekPanel.SetActive(true);
 
@@ -1433,17 +1554,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         // 리버럴 엔딩 판정
         if ((int)PhotonNetwork.CurrentRoom.CustomProperties["liberalPolicy"] == 5)
         {
-            baseImg.sprite = endingBase[1]; // 리버럴 배경으로 교환
-
-            Text[] texts = endingPanel.GetComponentsInChildren<Text>();
-            texts[0].text = "리버럴이 승리하였습니다";
-            texts[1].text = "리버럴 정책 5개 발의";
-
-            ShowAllPositionCard();
-
-            endingPanel.SetActive(true);
-
-            StartCoroutine(WaitPanelSeconds(8f, InitWhenJoinedRoom));
+            StartCoroutine(WaitPanelSeconds(4f, () => { LiberalWin("리버럴 정책 5개 발의"); }));
         }
         else // 결과 안내 후 다음 내각 의회 구성
         {
@@ -1452,9 +1563,29 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
     }
 
+    public void LiberalWin(string reason)
+    {
+        roomNameText.text = $"리버럴 승리";
+
+        infoPanel.SetActive(false);
+
+        baseImg.sprite = endingBase[1]; // 리버럴 배경으로 교환
+
+        Text[] texts = endingPanel.GetComponentsInChildren<Text>();
+        texts[0].text = "리버럴이 승리하였습니다";
+        texts[1].text = reason;
+
+        ShowAllPositionCard();
+
+        endingPanel.SetActive(true);
+
+        StartCoroutine(WaitPanelSeconds(8f, InitWhenJoinedRoom));
+    }
+
     public void StartNewTurnRPC()
     {
-        showIdentityPanel.SetActive(false); // 정책 미리보기 비활성화
+        showIdentityPanel.SetActive(false); // 신분 보기 비활성화
+        policyPeekPanel.SetActive(false); // 정책 미리보기 비활성화
 
         view.RPC("StartNewTurn", RpcTarget.MasterClient);
     }
