@@ -951,10 +951,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
                 texts[0].text = "신성한 의회 단계입니다";
                 texts[1].text = "대통령, 수상";
                 texts[2].text = $"{president.NickName}, {chancellor.NickName}";
-                texts[3].text = "모두의 채팅과 보이스가 중지됩니다.";
+                texts[3].text = "모두의 채팅이 중지됩니다.";
                 texts[4].text = "대통령과 수상은 정책을 선택해주십시오.";
 
-                // 채팅 보이스 막아야 함
                 chatInputField.interactable = false;
 
                 infoPanel.SetActive(true);
