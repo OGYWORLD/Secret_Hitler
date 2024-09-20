@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -15,6 +14,7 @@ public class CEnterDelay : MonoBehaviour
         tips.Add("히틀러가 수상이 되는 걸 주의하세요!");
         tips.Add("대통령은 신중하게 선택하세요!");
         tips.Add("정책 결과를 신중하게 확인하세요!");
+        tips.Add("내각을 함부로 무산시키지 마세요!");
     }
     private void OnEnable()
     {

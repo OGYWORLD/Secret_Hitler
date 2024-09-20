@@ -8,7 +8,7 @@ using Photon.Pun;
 
 public class PhotonChatManager : MonoBehaviour, IChatClientListener
 {
-    public static PhotonChatManager Instance { get; set; }
+    public static PhotonChatManager Instance { get; private set; }
 
     private ChatClient chatClient;
     private string roomName;

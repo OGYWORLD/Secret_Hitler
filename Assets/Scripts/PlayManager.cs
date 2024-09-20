@@ -34,7 +34,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     private Color nonReadyColor = new Color(188 / 255f, 188 / 255f, 188 / 255f);
     private Color liberalColor = new Color(120f / 255f, 253f / 255f, 249f / 255f);
     private Color pacistColor = new Color(253f / 255f, 120f / 255f, 138f / 255f);
-    private Color hitlerColor = new Color(255f / 255f, 52f / 255f, 78f / 255f);
 
     public Text roomNameText;
     public Text stateText;
@@ -42,6 +41,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public GameObject chatObj;
     public GameObject myPosObj;
     public GameObject myCard;
+    public Text nameText;
 
     public GameObject[] nameCards;
     public Transform[] cardTrans;
@@ -180,6 +180,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void InitWhenJoinedRoom()
     {
+        nameText.text = DatabaseManager.Instance.data.name; // 플레이어 이름 출력
+
         roomNameText.text = PhotonNetwork.CurrentRoom.Name; // 방 이름 설정
 
         baseImg.sprite = endingBase[2]; // 배경화면 초기화
