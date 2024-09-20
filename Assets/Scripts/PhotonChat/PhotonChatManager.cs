@@ -1,7 +1,5 @@
 using Photon.Chat;
 using ExitGames.Client.Photon;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
@@ -46,10 +44,7 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
 
     public void OnConnected() // 서버가 연결되었을 때 호출되는 함수
     {
-        Debug.Log("포톤 채팅 서버가 연결되었습니다.");
-
         chatClient.Subscribe(new string[] { roomName }); // 글로벌 채널 구독
-        print($"{roomName} 채팅 서버 연결");
     }
 
     // 다른 사람이 보낸 메시지를 받을 때 호출되는 메시지
@@ -76,7 +71,6 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
 
     public void LeaveChannel(string channelName)
     {
-        print($"{channelName} 채팅 서버 끊음");
         // 특정 채널에서 구독을 해제 (채널 나가기)
         chatClient.Unsubscribe(new string[] { channelName });
     }
