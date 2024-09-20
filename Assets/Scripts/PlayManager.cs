@@ -143,6 +143,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public Image[] policyPeekImages; // 정책 미리보기의 Images
 
+    public Sprite presidentImage; // 대통령 팻말 이미지
+    public Sprite chancellorImage; // 수상 팻말 이미지
 
     private void Awake()
     {
@@ -297,6 +299,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         if(PhotonNetwork.IsMasterClient)
             InitMarker(); // 추적용 마커 초기화
         InitMarkerActive(); // 추적용 마커 오브젝트 초기화
+
+        InitPreChanImage(); // 대통령, 수상 명패 초기화
     }
 
     public int[] SufflePolicy() // 정책 배열 섞기
@@ -531,7 +535,25 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void ShowPickChancellorInfo(Action pickChancellor) // 수상 뽑으라고 안내
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
+
+        roomNameText.text = "";
+
+        InitPreChanImage(); // 대통령 수상 명패 초기화
+
         infoPanel.SetActive(false);
+
+        // 대통령 명패 활성화
+        if(((Player)PhotonNetwork.CurrentRoom.CustomProperties["president"]) == PhotonNetwork.LocalPlayer)
+        {
+            myCard.GetComponentsInChildren<Image>(true)[3].sprite = presidentImage;
+            myCard.GetComponentsInChildren<Image>(true)[3].gameObject.SetActive(true);
+        }
+        else
+        {
+            cardDictionary[((Player)PhotonNetwork.CurrentRoom.CustomProperties["president"]).NickName].GetComponentsInChildren<Image>(true)[3].sprite = presidentImage;
+            cardDictionary[((Player)PhotonNetwork.CurrentRoom.CustomProperties["president"]).NickName].GetComponentsInChildren<Image>(true)[3].gameObject.SetActive(true);
+        }
 
         // 0: 내각구성, 1: 대통령, 2: 대통령이름, 3: 다음 대통령, 4: 대통령은 수상을 선정~
         Text[] texts = infoPanel.GetComponentsInChildren<Text>();
@@ -577,6 +599,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void PickChanellorInfo() // 수상 뽑기
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.paperSF);
+
         infoPanel.SetActive(false);
 
         // 대통령이라면 수상 선택
@@ -672,6 +696,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void PickNextPresident() // 다음 대통령으로 선정할 대상 지정
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.paperSF);
+
         roomNameText.text = "다음 대통령을 지정하십시오";
         
         nextPrePickPanel.SetActive(false);
@@ -737,6 +763,20 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void ShowPollInfo()
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
+
+        // 수상 명패 활성화
+        if (((Player)PhotonNetwork.CurrentRoom.CustomProperties["chancellor"]) == PhotonNetwork.LocalPlayer)
+        {
+            myCard.GetComponentsInChildren<Image>(true)[3].sprite = chancellorImage;
+            myCard.GetComponentsInChildren<Image>(true)[3].gameObject.SetActive(true);
+        }
+        else
+        {
+            cardDictionary[((Player)PhotonNetwork.CurrentRoom.CustomProperties["chancellor"]).NickName].GetComponentsInChildren<Image>(true)[3].sprite = chancellorImage;
+            cardDictionary[((Player)PhotonNetwork.CurrentRoom.CustomProperties["chancellor"]).NickName].GetComponentsInChildren<Image>(true)[3].gameObject.SetActive(true);
+        }
+
         chanPanel.SetActive(false);
         infoPanel.SetActive(false);
 
@@ -769,6 +809,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     {
         if ((bool)PhotonNetwork.LocalPlayer.CustomProperties["dead"]) return; // 죽은 사람은 투표하지 못한다.
 
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.paperSF);
+
         pollResultHash.Clear();
 
         if (PhotonNetwork.LocalPlayer == PhotonNetwork.CurrentRoom.CustomProperties["president"] ||
@@ -779,7 +821,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
 
         // 초기화
-        roomNameText.text = "투표를 진행해주십시오.";
+        roomNameText.text = "투표를 진행해주십시오";
         pollFinBtn.gameObject.GetComponentInChildren<Text>().text = "투표 완료";
         myJaNein = -1;
 
@@ -925,6 +967,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void ShowPolicyPick(int result)
     {
+        SoundManager.Instance.bgmAS.Stop();
+
         pollResultPanel.SetActive(false);
         roomNameText.text = "";
 
@@ -940,6 +984,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             }
             else // 정책 뽑기
             {
+                SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.charmBellSF);
+
                 infoPanel.SetActive(false);
 
                 // 정책 뽑는다 info panel 나오기
@@ -965,13 +1011,15 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
                 }
                 else // 아닐 시 대기
                 {
-                    roomNameText.text = "신성한 의회 단계입니다. 정숙해주세요.";
+                    roomNameText.text = "신성한 의회 단계입니다 정숙해주세요";
                     StartCoroutine(WaitPanelSeconds(4f, () => { infoPanel.SetActive(false); }));
                 }
             }
         }
         else // 내각 구성에 실패했다면 추적용 마커 1칸 전진
         {
+            SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
+
             PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
 
             int m = (int)existRoomProperties["marker"];
@@ -1024,6 +1072,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void PacistWin(string reason)
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
+
         baseImg.sprite = endingBase[0]; // 파시즘 배경으로 교환
 
         Text[] texts = endingPanel.GetComponentsInChildren<Text>();
@@ -1095,6 +1145,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void PickPolicyByPresident() // 대통령 정책 뽑기
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.paperSF);
         roomNameText.text = "버릴 정책을 선택해주세요";
 
         infoPanel.SetActive(false);
@@ -1169,6 +1220,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void PickPolicyByChancellor(int n)
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.paperSF);
+
         policyPanel.SetActive(false);
 
         // 이전 수상 여부 설정
@@ -1220,6 +1273,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         if (curPickedPolicy == 0) // 뽑힌 정책이 리버럴이라면
         {
+            SoundManager.Instance.bgmAS.Stop();
+
             int idx = (int)PhotonNetwork.CurrentRoom.CustomProperties["liberalPolicy"]; // 보드판에 깔기
             pickedLiberal[idx].SetActive(true);
 
@@ -1227,6 +1282,13 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
             existRoomProperties["liberalPolicy"] = (int)existRoomProperties["liberalPolicy"] + 1;
             PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
+            if((int)existRoomProperties["liberalPolicy"] > 3)
+            {
+                SoundManager.Instance.PlayBGM(SoundManager.Instance.liberalBGM);
+            }
+
+            SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
 
             // 정책 결과 안내
             textInfo[0].text = "이번 의회 결과는 리버럴입니다";
@@ -1242,6 +1304,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else // 뽑힌 정책이 파시즘이라면
         {
+            SoundManager.Instance.bgmAS.Stop();
+
             int idx = (int)PhotonNetwork.CurrentRoom.CustomProperties["pacismPolicy"]; // 보드판에 깔기
             pickedPacist[idx].SetActive(true);
 
@@ -1249,6 +1313,13 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             PhotonHashtable existRoomProperties = PhotonNetwork.CurrentRoom.CustomProperties;
             existRoomProperties["pacismPolicy"] = (int)existRoomProperties["pacismPolicy"] + 1;
             PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
+
+            if((int)existRoomProperties["pacismPolicy"] > 2)
+            {
+                SoundManager.Instance.PlayBGM(SoundManager.Instance.pacistBGM);
+            }
+
+            SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
 
             // 정책 결과 안내
             textInfo[0].text = "이번 의회 결과는 파시즘입니다";
@@ -1281,6 +1352,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else if(special == (int)PresidentSpecial.Policy)// 대통령 특수 권한 실행 - 정책 확인
         {
+            SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.typeBellSF);
             roomNameText.text = "대통령 특수 권한 실행 - 정책 미리 보기";
            
             textInfo[0].text = "대통령 특수 권한 실행";
@@ -1295,6 +1367,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else if (special == (int)PresidentSpecial.Identity)// 대통령 특수 권한 실행 - 신분 확인
         {
+            SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.typeBellSF);
             roomNameText.text = "대통령 특수 권한 실행 - 신분 확인";
 
             textInfo[0].text = "대통령 특수 권한 실행";
@@ -1309,6 +1382,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else if (special == (int)PresidentSpecial.NextPresident)// 대통령 특수 권한 실행 - 다음 대통령 지정
         {
+            SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.typeBellSF);
             roomNameText.text = "대통령 특수 권한 실행 - 다음 대통령 지정";
 
             textInfo[0].text = "대통령 특수 권한 실행";
@@ -1324,6 +1398,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else if (special == (int)PresidentSpecial.Kill)// 대통령 특수 권한 실행 - 처형
         {
+            SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.typeBellSF);
             roomNameText.text = "대통령 특수 권한 실행 - 처형";
 
             textInfo[0].text = "대통령 특수 권한 실행";
@@ -1403,6 +1478,10 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void ChangeNameCardForDead(string name) // 모든 사람의 프로필에 죽은 사람의 네임 카드 변경
     {
+        // 총소리
+        SoundManager.Instance.bgmAS.Pause();
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.killBellSF);
+
         roomNameText.text = $"{name}이(가) 사망하였습니다";
 
         if (PhotonNetwork.LocalPlayer.NickName == name)
@@ -1421,14 +1500,12 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else
         {
-            StartCoroutine(WaitPanelSeconds(4f, StartNewTurn));
+            StartCoroutine(WaitPanelSeconds(4f, () => { SoundManager.Instance.bgmAS.Play(); StartNewTurn(); }));
         }
     }
 
     public void CheckIdentityRPC()
     {
-        roomNameText.text = "대통령이 신분을 확인할 사람을 선택하고 있습니다";
-
         if (PhotonNetwork.IsMasterClient)
             view.RPC("CheckIdentity", (Player)PhotonNetwork.CurrentRoom.CustomProperties["president"]);
     }
@@ -1436,6 +1513,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void CheckIdentity()
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.paperSF);
+
         InitIdentityCards();
         identitySelectPanel.SetActive(false);
         
@@ -1460,6 +1539,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void ShowIdentity(string name)
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.typeBellSF);
+
         view.RPC("ShowPresidentCheckWho", RpcTarget.All, name);
 
         identitySelectPanel.SetActive(false);
@@ -1520,6 +1601,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void CheckPolicy() // 대통령 특수 권한 - 정책 확인하기
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.paperSF);
+
         policyPeekPanel.SetActive(false);
 
         roomNameText.text = "다음 정책을 미리 확인하십시오";
@@ -1564,6 +1647,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void LiberalWin(string reason)
     {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
+
         roomNameText.text = $"리버럴 승리";
 
         infoPanel.SetActive(false);
@@ -1746,6 +1831,16 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         PhotonNetwork.LeaveRoom();
     }
 
+    public void InitPreChanImage() // 대통령, 수상 이미지 초기화
+    {
+        foreach(GameObject nameCard in cardDictionary.Values)
+        {
+            nameCard.GetComponentsInChildren<Image>(true)[3].gameObject.SetActive(false);
+        }
+
+        myCard.GetComponentsInChildren<Image>(true)[3].gameObject.SetActive(false);
+    }
+
     private IEnumerator GameStartIntro() // 게임 시작 후 신분 인트로
     {
         float sumTime = 0f;
@@ -1838,6 +1933,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         fadeImage.color = color;
 
         yield return new WaitForSeconds(0.5f);
+
+        SoundManager.Instance.PlayBGM(SoundManager.Instance.defaultBGM);
 
         ShowPickChancellorInfo(PickChanellorInfo);
 

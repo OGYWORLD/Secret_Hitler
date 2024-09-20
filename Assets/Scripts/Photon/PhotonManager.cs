@@ -47,6 +47,11 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         PhotonNetwork.ConnectUsingSettings();
     }
 
+    public override void OnJoinedLobby()
+    {
+        SoundManager.Instance.PlayBGM(SoundManager.Instance.lobyBGM);
+    }
+
     public override void OnConnectedToMaster()
     {
         PhotonNetwork.JoinLobby();

@@ -26,6 +26,11 @@ public class MainMenuManager : MonoBehaviourPunCallbacks
         makeRoomPanel.SetActive(false);
     }
 
+    private void OnEnable()
+    {
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.shortBellSF);
+    }
+
     private void ToMakeRoom()
     {
         makeRoomPanel.SetActive(true);

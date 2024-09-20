@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
 
@@ -49,7 +48,6 @@ public class CLogin : MonoBehaviourPunCallbacks
         afterTitleObj.SetActive(false);
         checkingTMP.SetActive(false);
         serverTMP.SetActive(false);
-        
 
         emailInput.text = "";
         pwInput.text = "";
@@ -58,6 +56,8 @@ public class CLogin : MonoBehaviourPunCallbacks
         pwInput.interactable = true;
         loginButton.interactable = true;
         createButton.interactable = true;
+
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
     }
 
     private void OnLogin()

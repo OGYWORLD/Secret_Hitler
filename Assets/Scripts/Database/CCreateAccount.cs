@@ -75,6 +75,8 @@ public class CCreateAccount : MonoBehaviour
         isCheckEmailDP = false;
         isNameLength = false;
         isCheckPW = false;
+
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.paperSF);
     }
 
     protected virtual void OnCreateAccount()
