@@ -343,8 +343,18 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void PassPSufflePolicy(int[] p)
     {
-        SoundManager.Instance.bgmAS.Stop(); // 배경음악 멈추기
         policyArray = p;
+    }
+
+    public void StopBGMRPC()
+    {
+        view.RPC("StopBGM", RpcTarget.All);
+    }
+
+    [PunRPC]
+    public void StopBGM()
+    {
+        SoundManager.Instance.bgmAS.Stop(); // 배경음악 멈추기
     }
 
     [PunRPC]
@@ -971,8 +981,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void ShowPolicyPick(int result)
     {
-        SoundManager.Instance.bgmAS.Stop();
-
         pollResultPanel.SetActive(false);
         roomNameText.text = "";
 
@@ -988,6 +996,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
             }
             else // 정책 뽑기
             {
+                SoundManager.Instance.bgmAS.Stop();
+
                 SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.charmBellSF);
 
                 infoPanel.SetActive(false);

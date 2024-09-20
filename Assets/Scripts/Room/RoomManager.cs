@@ -152,6 +152,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         PhotonNetwork.CurrentRoom.SetCustomProperties(existRoomProperties);
 
+        playManager.StopBGMRPC(); // 노래 멈추기
         playManager.PickPosition(); // 역할 뽑기
         playManager.SetPlayerCustomForPosition(); // 뽑은 역할 프로퍼티 저장
         playManager.StateInitForGameStartRPC(); // 상태 지우기

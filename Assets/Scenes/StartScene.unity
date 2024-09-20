@@ -17085,6 +17085,7 @@ MonoBehaviour:
   shortBellSF: {fileID: 8300000, guid: da6c7cd6ccf52d04a9d84ca0694669ea, type: 3}
   typeBellSF: {fileID: 8300000, guid: c7ff70693c047ed47aad8d64b31eebf6, type: 3}
   charmBellSF: {fileID: 8300000, guid: c6c66a844d72b8049b3d176db777559b, type: 3}
+  killBellSF: {fileID: 0}
 --- !u!82 &682682410
 AudioSource:
   m_ObjectHideFlags: 0
