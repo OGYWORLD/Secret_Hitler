@@ -1564,9 +1564,10 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         int actorNumber = nameActorDictionary[name];
 
-        cardDictionary[name].transform.GetChild(3).gameObject.SetActive(true);
+        //cardDictionary[name].transform.GetChild(3).gameObject.SetActive(true);
 
         identityImage.sprite = cardDictionary[name].transform.GetChild(3).gameObject.GetComponent<Image>().sprite; // 신분 이미지 설정
+
         texts[0].text = $"{name}는(은)";
         if((Position)PhotonNetwork.CurrentRoom.Players[actorNumber].CustomProperties["position"] == Position.liberal)
         {
@@ -1580,8 +1581,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else if ((Position)PhotonNetwork.CurrentRoom.Players[actorNumber].CustomProperties["position"] == Position.hitler)
         {
-            texts[1].color = hitlerColor;
-            texts[1].text = "히틀러입니다.";
+            identityImage.sprite = posCardImg[1]; // 히틀러일 경우 신분 이미지는 파시스트로 공개
+            texts[1].color = pacistColor;
+            texts[1].text = "파시스트입니다.";
         }
 
         showIdentityPanel.SetActive(true);
