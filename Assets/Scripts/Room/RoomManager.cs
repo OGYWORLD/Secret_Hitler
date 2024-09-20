@@ -52,9 +52,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     public override void OnJoinedRoom() // 방 입장했을 시
     {
-        SoundManager.Instance.PlayBGM(SoundManager.Instance.waitBGM);
-        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
-
         PhotonChatManager.Instance.ConnectToServer(PhotonNetwork.CurrentRoom.Name); // 채팅 서버 연결
 
         playManager.InitWhenJoinedRoom(); // 오브젝트 초기화
@@ -125,8 +122,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
     public void StartGame() // 게임 시작
     {
         if (!PhotonNetwork.IsMasterClient) return; // 방장이 아니라면 반환
-
-        SoundManager.Instance.bgmAS.Stop(); // 배경음악 멈추기
 
         // 버튼 비활성화
         playManager.readyButton.gameObject.SetActive(false);

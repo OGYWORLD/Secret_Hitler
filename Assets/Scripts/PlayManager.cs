@@ -301,6 +301,9 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         InitMarkerActive(); // 추적용 마커 오브젝트 초기화
 
         InitPreChanImage(); // 대통령, 수상 명패 초기화
+
+        SoundManager.Instance.PlayBGM(SoundManager.Instance.waitBGM);
+        SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
     }
 
     public int[] SufflePolicy() // 정책 배열 섞기
@@ -340,6 +343,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     [PunRPC]
     public void PassPSufflePolicy(int[] p)
     {
+        SoundManager.Instance.bgmAS.Stop(); // 배경음악 멈추기
         policyArray = p;
     }
 
@@ -1254,6 +1258,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     public void ShowPickedPolicy(int n, int c) // 정책 보여주기
     {
         InitMarkerActive(); // 마커 초기화
+        SoundManager.Instance.bgmAS.Play();
 
         roomNameText.text = "";
         chatInputField.interactable = true;
@@ -1273,8 +1278,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         if (curPickedPolicy == 0) // 뽑힌 정책이 리버럴이라면
         {
-            SoundManager.Instance.bgmAS.Stop();
-
             int idx = (int)PhotonNetwork.CurrentRoom.CustomProperties["liberalPolicy"]; // 보드판에 깔기
             pickedLiberal[idx].SetActive(true);
 
@@ -1285,6 +1288,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
             if((int)existRoomProperties["liberalPolicy"] > 3)
             {
+                SoundManager.Instance.bgmAS.Stop();
                 SoundManager.Instance.PlayBGM(SoundManager.Instance.liberalBGM);
             }
 
@@ -1304,8 +1308,6 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
         }
         else // 뽑힌 정책이 파시즘이라면
         {
-            SoundManager.Instance.bgmAS.Stop();
-
             int idx = (int)PhotonNetwork.CurrentRoom.CustomProperties["pacismPolicy"]; // 보드판에 깔기
             pickedPacist[idx].SetActive(true);
 
@@ -1316,6 +1318,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
             if((int)existRoomProperties["pacismPolicy"] > 2)
             {
+                SoundManager.Instance.bgmAS.Stop();
                 SoundManager.Instance.PlayBGM(SoundManager.Instance.pacistBGM);
             }
 
@@ -1860,6 +1863,8 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
         color.a = 1;
         fadeImage.color = color;
+
+        SoundManager.Instance.PlaySoundEffect(SoundManager.Instance.charmBellSF);
 
         // 신분 공개 오브젝트 활성화
         posInfoTextObj.SetActive(true);
