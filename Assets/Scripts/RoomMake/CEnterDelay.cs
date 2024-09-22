@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class CEnterDelay : MonoBehaviour
 {
-    public TextMeshProUGUI tipTMP;
+    public Text tipText;
 
     private List<string> tips = new List<string>();
 
@@ -19,6 +20,6 @@ public class CEnterDelay : MonoBehaviour
     private void OnEnable()
     {
         int index = Random.Range(0, tips.Count);
-        tipTMP.text = tips[index];
+        tipText.text = tips[index];
     }
 }
