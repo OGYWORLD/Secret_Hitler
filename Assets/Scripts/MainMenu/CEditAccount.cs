@@ -36,6 +36,8 @@ public class CEditAccount : CCreateAccount
         infoPanelTMP.text = "수정이 완료되었습니다.";
 
         DatabaseManager.Instance.UpdateUserData();
+
+        PhotonManager.Instance.ChangeNickName();
     }
 
     protected override void FailCreate()

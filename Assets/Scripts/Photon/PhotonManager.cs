@@ -100,4 +100,9 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     {
         return PhotonNetwork.CurrentRoom.MaxPlayers;
     }
+
+    public void ChangeNickName()
+    {
+        PhotonNetwork.LocalPlayer.NickName = DatabaseManager.Instance.data.name;
+    }
 }
