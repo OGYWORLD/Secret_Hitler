@@ -1155,7 +1155,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     {
         foreach(GameObject obj in cardDictionary.Values)
         {
-            obj.SetActive(true);
+            obj.transform.GetChild(3).gameObject.SetActive(false);
         }
     }
 
