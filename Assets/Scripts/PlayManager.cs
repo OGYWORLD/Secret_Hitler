@@ -1088,6 +1088,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void PacistWin(string reason)
     {
+        SoundManager.Instance.bgmAS.Stop();
         SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
 
         baseImg.sprite = endingBase[0]; // 파시즘 배경으로 교환
@@ -1155,7 +1156,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
     {
         foreach(GameObject obj in cardDictionary.Values)
         {
-            obj.transform.GetChild(3).gameObject.SetActive(false);
+            obj.transform.GetChild(3).gameObject.SetActive(true);
         }
     }
 
@@ -1664,6 +1665,7 @@ public class PlayManager : MonoBehaviourPunCallbacks // 싱글톤으로 올릴�
 
     public void LiberalWin(string reason)
     {
+        SoundManager.Instance.bgmAS.Stop();
         SoundManager.Instance.PlaySoundEffect2(SoundManager.Instance.bellSF);
 
         roomNameText.text = $"리버럴 승리";
