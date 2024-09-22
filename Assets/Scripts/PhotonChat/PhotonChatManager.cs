@@ -66,7 +66,8 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
     // 채팅 메시지 보내기
     public void SendChat(string message)
     {
-        chatClient.PublishMessage(roomName, message);
+        if(message.Length != 0)
+            chatClient.PublishMessage(roomName, message);
     }
 
     public void LeaveChannel(string channelName)
