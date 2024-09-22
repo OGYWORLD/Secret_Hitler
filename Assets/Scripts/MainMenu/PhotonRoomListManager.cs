@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PhotonMainMenuManager : MonoBehaviourPunCallbacks
+public class PhotonRoomListManager : MonoBehaviourPunCallbacks
 {
     public List<GameObject> roomCards = new List<GameObject>();
 
