@@ -17,7 +17,7 @@ public class DatabaseManager : MonoBehaviour
 
     private string dbName = "SPACE"; // 디비 이름
     private string tableName = "USER"; // 유저 테이블 이름 (uid, email, pw, level)
-    private string ip = "52.79.116.63";
+    private string ip = "43.200.6.7";
 
     public string rootPW = "";
 

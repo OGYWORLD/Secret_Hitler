@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 
-public class PhotonRoomManager : MonoBehaviourPunCallbacks
+public class RoomManager : MonoBehaviourPunCallbacks
 {
     public PlayManager playManager;
 

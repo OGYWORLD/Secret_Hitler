@@ -12,7 +12,7 @@ public class PhotonChatManager : MonoBehaviour, IChatClientListener
     private string roomName;
 
     public PlayManager playManager;
-    public PhotonRoomManager roomManager;
+    public RoomManager roomManager;
 
     private void Awake()
     {
